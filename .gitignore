@@ -6,6 +6,19 @@ __pycache__/
 # C extensions
 *.so
 
+# LaTeX intermediate files (keep source private, commit PDF only)
+*.tex
+*.aux
+*.log
+*.out
+*.toc
+*.bbl
+*.blg
+*.fls
+*.fdb_latexmk
+*.synctex.gz
+COMPILE_INSTRUCTIONS.md
+
 # Distribution / packaging
 .Python
 build/
