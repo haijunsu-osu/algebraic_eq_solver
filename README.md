@@ -31,6 +31,7 @@ The solution methodology follows these key steps:
 algebraic_eq_solver/
 ├── README.md                    # This file
 ├── numerical_solver.py          # Main numerical solver (no SymPy dependency)
+├── extended_solver.py           # Extended solver for singular B matrices
 ├── symbolic_derivation.py       # Complete symbolic derivation using SymPy
 ├── symbolic_coefficients.py     # Detailed quartic coefficient expressions
 └── complete_analysis.py         # End-to-end demonstration
@@ -49,6 +50,7 @@ pip install numpy sympy
 ```python
 import numpy as np
 from numerical_solver import solve_trigonometric_system
+from extended_solver import solve_extended_trigonometric_system
 
 # Define the system matrices
 A = np.array([[2.0, 1.0],
@@ -59,12 +61,32 @@ B = np.array([[1.5, -0.5],
 
 C = np.array([2.939, 4.134])
 
-# Solve the system
-solutions = solve_trigonometric_system(A, B, C)
+# Solve the system (automatically handles singular B)
+solutions = solve_extended_trigonometric_system(A, B, C)
 
 # Display results
 for i, sol in enumerate(solutions):
     print(f"Solution {i+1}: x = {sol['x']:.6f}, y = {sol['y']:.6f}")
+```
+
+### Singular B Matrix Example
+
+```python
+# Example with B = 0 (zero matrix)
+A = np.array([[1.0, 0.5],
+              [0.3, 1.2]])
+
+B = np.array([[0.0, 0.0],  # Singular matrix
+              [0.0, 0.0]])
+
+# Choose C such that a solution exists: A[cos(x), sin(x)] = C
+cos_x = 0.8  # cos²(x) + sin²(x) = 1
+sin_x = 0.6
+C = A @ np.array([cos_x, sin_x])
+
+# Solve with extended solver
+solutions = solve_extended_trigonometric_system(A, B, C, verbose=True)
+print(f"Found {len(solutions)} solutions (y is free parameter)")
 ```
 
 ## 📊 Key Features
@@ -75,6 +97,14 @@ for i, sol in enumerate(solutions):
 - **Robust validation** - Comprehensive error checking
 - **Multiple solutions** - Finds all valid solutions
 - **Machine precision** - Errors typically < 1e-15
+- **Handles non-singular B matrices** - Uses quartic polynomial approach
+
+### 🔧 Extended Solver (`extended_solver.py`)
+- **Handles singular B matrices** - Cases where det(B) = 0
+- **Zero matrix case** - When B = 0, reduces to A[cos x, sin x] = C
+- **Rank-1 matrix case** - Uses geometric constraints and SVD analysis
+- **Automatic detection** - Switches between standard and extended methods
+- **Comprehensive analysis** - Detailed singular matrix structure analysis
 
 ### 🔬 Symbolic Analysis (`symbolic_derivation.py`)
 - **Complete mathematical derivation** using SymPy
@@ -108,6 +138,9 @@ python symbolic_coefficients.py
 
 # Run complete analysis
 python complete_analysis.py
+
+# Test extended solver (including singular B matrices)
+python extended_solver.py
 ```
 
 ### Sample Test Results
@@ -143,6 +176,27 @@ The system transforms into a quartic polynomial: `a₄t⁴ + a₃t³ + a₂t² +
 - `a₄` and `a₀`: Symmetric structure with respect to the transformation
 - `a₃` and `a₁`: Factor of 4, similar algebraic form
 - `a₂`: Factor of 2, includes cross-terms between matrices
+
+### Singular B Matrix Cases
+
+When `det(B) = 0`, the standard quartic approach fails. The extended solver handles these cases:
+
+#### Case 1: B = 0 (Zero Matrix)
+- **System reduces to**: `A[cos x, sin x] = C`
+- **Solution approach**: Direct linear system solving
+- **Result**: `x` is determined, `y` becomes a free parameter
+- **Condition**: `A` must be invertible and `||A⁻¹C|| = 1`
+
+#### Case 2: rank(B) = 1
+- **Constraint**: `B[cos y, sin y]` can only produce vectors in one direction
+- **Solution approach**: Geometric constraint analysis using SVD
+- **Condition**: `C - A[cos x, sin x]` must be in the range of `B`
+- **Method**: Parameterize solutions and check feasibility
+
+#### Case 3: Both A and B singular
+- **Analysis**: System may be underdetermined or inconsistent
+- **Approach**: Rank analysis and consistency checking
+- **Result**: Multiple free parameters or no solutions
 
 ### Key Mathematical Properties
 
