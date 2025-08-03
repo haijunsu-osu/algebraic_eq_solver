@@ -99,7 +99,7 @@ This solver implements a complete analytical approach to solving trigonometric s
 4. **Quartic Polynomial**: Derive a single quartic polynomial in variable `t`
 5. **Numerical Solution**: Solve using `numpy.roots()` and convert back to `(θ₁,θ₂)`
 
-##  Key Features
+## 📊 Key Features
 
 ### ✅ Unified Solver
 - **Automatic singular matrix detection** - Handles both regular and singular B matrices
