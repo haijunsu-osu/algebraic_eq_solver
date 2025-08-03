@@ -1,23 +1,58 @@
 # Algebraic Equation Solver
 
-A comprehensive Python implementation for solving systems of trigonometric algebraic equations using symbolic computation and numerical methods.
-
-## 🎯 Problem Statement
-
-This project solves the system of trigonometric algebraic equations:
-
+A robust numerical solver for trigonometric systems of the form:
 ```
 A[cos θ₁, sin θ₁] + B[cos θ₂, sin θ₂] = C
 ```
 
-Where:
-- `A` and `B` are 2×2 matrices
-- `C` is a 2×1 vector
-- `θ₁` and `θ₂` are unknown angles (joint angles theta1 and theta2)
+## Features
 
-## 🔬 Mathematical Approach
+- **Complete Solution Coverage**: Handles both regular and singular B matrices
+- **Robust Numerical Methods**: Uses Weierstrass substitution and quartic polynomial solving
+- **Singularity Handling**: Advanced SVD-based analysis for rank-deficient matrices
+- **Edge Case Protection**: Comprehensive input validation and numerical stability safeguards
+- **Multiple Solution Types**: Returns all real solutions with optional complex solution support
 
-The solution methodology follows these key steps:
+## Installation
+
+### From Source
+```bash
+git clone https://github.com/haijunsu-osu/algebraic_eq_solver.git
+cd algebraic_eq_solver
+pip install -e .
+```
+
+### As a Dependency
+```bash
+pip install git+https://github.com/haijunsu-osu/algebraic_eq_solver.git
+```
+
+## Quick Start
+
+```python
+import numpy as np
+from algebraic_eq_solver import solve_trig_sys
+
+# Define your system matrices
+A = np.array([[2.0, 1.0],
+              [1.0, 3.0]])
+B = np.array([[1.5, -0.5],
+              [0.5, 2.0]])
+C = np.array([1.0, 2.0])
+
+# Solve the system
+solutions = solve_trig_sys(A, B, C, verbose=True)
+
+# Process results
+for i, sol in enumerate(solutions):
+    print(f"Solution {i+1}:")
+    print(f"  θ₁ = {sol['th1']:.6f} rad")
+    print(f"  θ₂ = {sol['th2']:.6f} rad")
+```
+
+## Mathematical Background
+
+This solver implements a complete analytical approach to solving trigonometric systems:
 
 1. **Linear System Transformation**: Express `cos(θ₂)` and `sin(θ₂)` in terms of `cos(θ₁)` and `sin(θ₁)`
 2. **Trigonometric Identity**: Apply `cos²(θ₂) + sin²(θ₂) = 1`
