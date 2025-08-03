@@ -7,23 +7,23 @@ A comprehensive Python implementation for solving systems of trigonometric algeb
 This project solves the system of trigonometric algebraic equations:
 
 ```
-A[cos th1, sin th1] + B[cos th2, sin th2] = C
+A[cos θ₁, sin θ₁] + B[cos θ₂, sin θ₂] = C
 ```
 
 Where:
 - `A` and `B` are 2×2 matrices
 - `C` is a 2×1 vector
-- `th1` and `th2` are unknown angles (joint angles theta1 and theta2)
+- `θ₁` and `θ₂` are unknown angles (joint angles theta1 and theta2)
 
 ## 🔬 Mathematical Approach
 
 The solution methodology follows these key steps:
 
-1. **Linear System Transformation**: Express `cos(th2)` and `sin(th2)` in terms of `cos(th1)` and `sin(th1)`
-2. **Trigonometric Identity**: Apply `cos²(th2) + sin²(th2) = 1`
-3. **Weierstrass Substitution**: Transform using `cos(th1) = (1-t²)/(1+t²)` and `sin(th1) = 2t/(1+t²)`
+1. **Linear System Transformation**: Express `cos(θ₂)` and `sin(θ₂)` in terms of `cos(θ₁)` and `sin(θ₁)`
+2. **Trigonometric Identity**: Apply `cos²(θ₂) + sin²(θ₂) = 1`
+3. **Weierstrass Substitution**: Transform using `cos(θ₁) = (1-t²)/(1+t²)` and `sin(θ₁) = 2t/(1+t²)`
 4. **Quartic Polynomial**: Derive a single quartic polynomial in variable `t`
-5. **Numerical Solution**: Solve using `numpy.roots()` and convert back to `(th1,th2)`
+5. **Numerical Solution**: Solve using `numpy.roots()` and convert back to `(θ₁,θ₂)`
 
 ## 📁 Project Structure
 
@@ -66,7 +66,7 @@ solutions = solve_trigonometric_system(A, B, C)
 
 # Display results
 for i, sol in enumerate(solutions):
-    print(f"Solution {i+1}: th1 = {sol['th1']:.6f}, th2 = {sol['th2']:.6f}")
+    print(f"Solution {i+1}: θ₁ = {sol['th1']:.6f}, θ₂ = {sol['th2']:.6f}")
 ```
 
 ### Singular B Matrix Example
@@ -79,14 +79,14 @@ A = np.array([[1.0, 0.5],
 B = np.array([[0.0, 0.0],  # Singular matrix
               [0.0, 0.0]])
 
-# Choose C such that a solution exists: A[cos(th1), sin(th1)] = C
-cos_th1 = 0.8  # cos²(th1) + sin²(th1) = 1
+# Choose C such that a solution exists: A[cos(θ₁), sin(θ₁)] = C
+cos_th1 = 0.8  # cos²(θ₁) + sin²(θ₁) = 1
 sin_th1 = 0.6
 C = A @ np.array([cos_th1, sin_th1])
 
 # Solve with the main solver (automatically detects singular B)
 solutions = solve_trigonometric_system(A, B, C, verbose=True)
-print(f"Found {len(solutions)} solutions (th2 is free parameter)")
+print(f"Found {len(solutions)} solutions (θ₂ is free parameter)")
 ```
 
 ## 📊 Key Features
@@ -104,7 +104,7 @@ print(f"Found {len(solutions)} solutions (th2 is free parameter)")
 - **Weierstrass substitution** - Converts to polynomial system
 
 #### Singular Matrix Handling:
-- **Zero matrix case** - When B = 0, reduces to A[cos x, sin x] = C
+- **Zero matrix case** - When B = 0, reduces to A[cos θ₁, sin θ₁] = C
 - **Rank-1 matrix case** - Uses geometric constraints and SVD analysis
 - **Comprehensive analysis** - Detailed singular matrix structure analysis
 
@@ -151,17 +151,17 @@ python extended_solver.py
 TESTING THE NUMERICAL SOLVER
 ============================================================
 True solution:
-  th1 = 0.523599 rad (30.0°)
-  th2 = 0.785398 rad (45.0°)
+  θ₁ = 0.523599 rad (30.0°)
+  θ₂ = 0.785398 rad (45.0°)
 
 Found 2 valid solutions:
 Solution 1:
-  th1 = 1.233171 rad (70.7°) - Alternative valid solution
-  th2 = 0.245952 rad (14.1°)
+  θ₁ = 1.233171 rad (70.7°) - Alternative valid solution
+  θ₂ = 0.245952 rad (14.1°)
   
 Solution 2:
-  th1 = 0.523599 rad (30.0°) - ✓ MATCHES KNOWN SOLUTION
-  th2 = 0.785398 rad (45.0°)
+  θ₁ = 0.523599 rad (30.0°) - ✓ MATCHES KNOWN SOLUTION
+  θ₂ = 0.785398 rad (45.0°)
 
 Success rate: 10/10 (100.0%)
 ```
@@ -184,15 +184,15 @@ The system transforms into a quartic polynomial: `a₄t⁴ + a₃t³ + a₂t² +
 When `det(B) = 0`, the standard quartic approach fails. The extended solver handles these cases:
 
 #### Case 1: B = 0 (Zero Matrix)
-- **System reduces to**: `A[cos th1, sin th1] = C`
+- **System reduces to**: `A[cos θ₁, sin θ₁] = C`
 - **Solution approach**: Direct linear system solving
-- **Result**: `th1` is determined, `th2` becomes a free parameter
+- **Result**: `θ₁` is determined, `θ₂` becomes a free parameter
 - **Condition**: `A` must be invertible and `||A⁻¹C|| = 1`
 
 #### Case 2: rank(B) = 1
-- **Constraint**: `B[cos th2, sin th2]` can only produce vectors in one direction
+- **Constraint**: `B[cos θ₂, sin θ₂]` can only produce vectors in one direction
 - **Solution approach**: Geometric constraint analysis using SVD
-- **Condition**: `C - A[cos th1, sin th1]` must be in the range of `B`
+- **Condition**: `C - A[cos θ₁, sin θ₁]` must be in the range of `B`
 - **Method**: Parameterize solutions and check feasibility
 
 #### Case 3: Both A and B singular
@@ -213,7 +213,7 @@ When `det(B) = 0`, the standard quartic approach fails. The extended solver hand
 1. **Input Validation**: Check matrix invertibility and numerical conditioning
 2. **Coefficient Computation**: Calculate quartic polynomial coefficients
 3. **Root Finding**: Use `numpy.roots()` for numerical stability
-4. **Solution Recovery**: Convert `t` values back to `(th1,th2)` coordinates
+4. **Solution Recovery**: Convert `t` values back to `(θ₁,θ₂)` coordinates
 5. **Verification**: Validate all solutions against original equations
 
 ### Numerical Stability Features

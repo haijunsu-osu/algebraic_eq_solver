@@ -2,14 +2,14 @@
 """
 Numerical Solver for Trigonometric System
 
-Solves the system: A[cos th1, sin th1] + B[cos th2, sin th2] = C
+Solves the system: A[cos θ₁, sin θ₁] + B[cos θ₂, sin θ₂] = C
 
 This script implements the complete algorithm:
-1. Express cos(th2) and sin(th2) in terms of cos(th1) and sin(th1) 
-2. Apply the identity cos²(th2) + sin²(th2) = 1
+1. Express cos(θ₂) and sin(θ₂) in terms of cos(θ₁) and sin(θ₁) 
+2. Apply the identity cos²(θ₂) + sin²(θ₂) = 1
 3. Use Weierstrass substitution to get a quartic polynomial in t
 4. Solve for t using numpy.roots
-5. Convert back to th1 and th2
+5. Convert back to θ₁ and θ₂
 
 Extended functionality for singular B matrices:
 - Handles rank-deficient matrices using SVD analysis
@@ -70,15 +70,15 @@ def analyze_singular_matrix(B: np.ndarray, tolerance: float = 1e-12) -> Dict[str
 
 def solve_zero_b_case(A: np.ndarray, C: np.ndarray, verbose: bool = False) -> List[Dict[str, float]]:
     """
-    Solve the case where B = 0, so the system becomes: A[cos(th1), sin(th1)] = C
+    Solve the case where B = 0, so the system becomes: A[cos(θ₁), sin(θ₁)] = C
     
-    This is a 2x2 linear system in cos(th1) and sin(th1).
+    This is a 2x2 linear system in cos(θ₁) and sin(θ₁).
     """
     solutions = []
     
     if verbose:
         print("\nCase: B = 0 matrix")
-        print("System reduces to: A[cos(th1), sin(th1)] = C")
+        print("System reduces to: A[cos(θ₁), sin(θ₁)] = C")
     
     # Check if A is invertible
     det_A = np.linalg.det(A)
@@ -87,26 +87,26 @@ def solve_zero_b_case(A: np.ndarray, C: np.ndarray, verbose: bool = False) -> Li
             print("Matrix A is also singular - system may be underdetermined")
         return solve_both_singular_case(A, C, verbose)
     
-    # Solve for cos(th1) and sin(th1)
+    # Solve for cos(θ₁) and sin(θ₁)
     try:
         trig_th1 = np.linalg.solve(A, C)
         cos_th1, sin_th1 = trig_th1[0], trig_th1[1]
         
         if verbose:
-            print(f"Solved: cos(th1) = {cos_th1:.6f}, sin(th1) = {sin_th1:.6f}")
+            print(f"Solved: cos(θ₁) = {cos_th1:.6f}, sin(θ₁) = {sin_th1:.6f}")
         
         # Check trigonometric identity
         identity_error = cos_th1**2 + sin_th1**2 - 1
         if abs(identity_error) > 1e-10:
             if verbose:
-                print(f"Trigonometric identity violated: cos²(th1) + sin²(th1) - 1 = {identity_error:.2e}")
+                print(f"Trigonometric identity violated: cos²(θ₁) + sin²(θ₁) - 1 = {identity_error:.2e}")
                 print("No solutions exist")
             return solutions
         
-        # Calculate th1
+        # Calculate θ₁
         th1 = math.atan2(sin_th1, cos_th1)
         
-        # For this case, th2 is free (can be any value)
+        # For this case, θ₂ is free (can be any value)
         # We'll return a few representative solutions
         for th2 in [0, math.pi/4, math.pi/2, math.pi, 3*math.pi/2]:
             solutions.append({
@@ -116,16 +116,16 @@ def solve_zero_b_case(A: np.ndarray, C: np.ndarray, verbose: bool = False) -> Li
                 'sin_th1': sin_th1,
                 'cos_th2': math.cos(th2),
                 'sin_th2': math.sin(th2),
-                'note': 'th2 is free parameter'
+                'note': 'θ₂ is free parameter'
             })
             
         if verbose:
-            print(f"Found solution with th1 = {th1:.6f}, th2 is free parameter")
-            print(f"Showing {len(solutions)} representative values of th2")
+            print(f"Found solution with θ₁ = {th1:.6f}, θ₂ is free parameter")
+            print(f"Showing {len(solutions)} representative values of θ₂")
             
     except np.linalg.LinAlgError:
         if verbose:
-            print("Failed to solve A[cos(th1), sin(th1)] = C")
+            print("Failed to solve A[cos(θ₁), sin(θ₁)] = C")
     
     return solutions
 
@@ -137,15 +137,15 @@ def solve_rank_1_b_case(A: np.ndarray, B: np.ndarray, C: np.ndarray,
     
     Strategy:
     1. Find null space of B^T (left null space of B)
-    2. Left multiply the system by the null vector to eliminate th2 terms
-    3. Solve the resulting equation in th1 only: a*cos(th1) + b*sin(th1) + c = 0
-    4. For each solution th1, substitute back to solve for th2
+    2. Left multiply the system by the null vector to eliminate θ₂ terms
+    3. Solve the resulting equation in θ₁ only: a*cos(θ₁) + b*sin(θ₁) + c = 0
+    4. For each solution θ₁, substitute back to solve for θ₂
     """
     solutions = []
     
     if verbose:
         print("\nCase: B has rank 1 - using null space approach")
-        print("Step 1: Find null space of B^T to eliminate th2 terms")
+        print("Step 1: Find null space of B^T to eliminate θ₂ terms")
     
     # Find the null space of B^T (left null space of B)
     # For rank-1 matrix, the null space is 1-dimensional
@@ -160,44 +160,44 @@ def solve_rank_1_b_case(A: np.ndarray, B: np.ndarray, C: np.ndarray,
         print(f"Verification: null_vector^T @ B = {null_vector @ B}")
     
     # Left multiply the original system by null_vector:
-    # A[cos(th1), sin(th1)] + B[cos(th2), sin(th2)] = C
-    # null_vector^T @ (A[cos(th1), sin(th1)] + B[cos(th2), sin(th2)]) = null_vector^T @ C
-    # null_vector^T @ A[cos(th1), sin(th1)] + null_vector^T @ B[cos(th2), sin(th2)] = null_vector^T @ C
+    # A[cos(θ₁), sin(θ₁)] + B[cos(θ₂), sin(θ₂)] = C
+    # null_vector^T @ (A[cos(θ₁), sin(θ₁)] + B[cos(θ₂), sin(θ₂)]) = null_vector^T @ C
+    # null_vector^T @ A[cos(θ₁), sin(θ₁)] + null_vector^T @ B[cos(θ₂), sin(θ₂)] = null_vector^T @ C
     # Since null_vector^T @ B = 0:
-    # null_vector^T @ A[cos(th1), sin(th1)] = null_vector^T @ C
+    # null_vector^T @ A[cos(θ₁), sin(θ₁)] = null_vector^T @ C
     
     left_A = null_vector @ A  # 1x2 vector
     right_C = null_vector @ C  # scalar
     
     if verbose:
-        print(f"Step 2: Transformed equation in th1 only:")
-        print(f"[{left_A[0]:.6f}, {left_A[1]:.6f}] @ [cos(th1), sin(th1)] = {right_C:.6f}")
-        print(f"Or: {left_A[0]:.6f}*cos(th1) + {left_A[1]:.6f}*sin(th1) = {right_C:.6f}")
-        print(f"Rearranged: {left_A[0]:.6f}*cos(th1) + {left_A[1]:.6f}*sin(th1) + {-right_C:.6f} = 0")
+        print(f"Step 2: Transformed equation in θ₁ only:")
+        print(f"[{left_A[0]:.6f}, {left_A[1]:.6f}] @ [cos(θ₁), sin(θ₁)] = {right_C:.6f}")
+        print(f"Or: {left_A[0]:.6f}*cos(θ₁) + {left_A[1]:.6f}*sin(θ₁) = {right_C:.6f}")
+        print(f"Rearranged: {left_A[0]:.6f}*cos(θ₁) + {left_A[1]:.6f}*sin(θ₁) + {-right_C:.6f} = 0")
     
-    # Solve the trigonometric equation: left_A[0]*cos(th1) + left_A[1]*sin(th1) + (-right_C) = 0
+    # Solve the trigonometric equation: left_A[0]*cos(θ₁) + left_A[1]*sin(θ₁) + (-right_C) = 0
     th1_solutions = solve_trigonometric_equation(left_A[0], left_A[1], -right_C, verbose)
     
     if verbose:
-        print(f"Step 3: Found {len(th1_solutions)} solutions for th1")
+        print(f"Step 3: Found {len(th1_solutions)} solutions for θ₁")
     
-    # For each th1 solution, substitute back into the original system to solve for th2
+    # For each θ₁ solution, substitute back into the original system to solve for θ₂
     for i, th1 in enumerate(th1_solutions):
         cos_th1 = math.cos(th1)
         sin_th1 = math.sin(th1)
         
         if verbose:
-            print(f"\nStep 4.{i+1}: Solving for th2 with th1 = {th1:.6f}")
-            print(f"cos(th1) = {cos_th1:.6f}, sin(th1) = {sin_th1:.6f}")
+            print(f"\nStep 4.{i+1}: Solving for θ₂ with θ₁ = {th1:.6f}")
+            print(f"cos(θ₁) = {cos_th1:.6f}, sin(θ₁) = {sin_th1:.6f}")
         
-        # Substitute th1 back into original system: A[cos(th1), sin(th1)] + B[cos(th2), sin(th2)] = C
-        # B[cos(th2), sin(th2)] = C - A[cos(th1), sin(th1)]
+        # Substitute θ₁ back into original system: A[cos(θ₁), sin(θ₁)] + B[cos(θ₂), sin(θ₂)] = C
+        # B[cos(θ₂), sin(θ₂)] = C - A[cos(θ₁), sin(θ₁)]
         rhs = C - A @ np.array([cos_th1, sin_th1])
         
         if verbose:
-            print(f"Right-hand side for th2 equation: {rhs}")
+            print(f"Right-hand side for θ₂ equation: {rhs}")
         
-        # Since B has rank 1, the system B[cos(th2), sin(th2)] = rhs may have:
+        # Since B has rank 1, the system B[cos(θ₂), sin(θ₂)] = rhs may have:
         # - No solution if rhs is not in the range of B
         # - Infinite solutions if rhs is in the range of B
         
@@ -205,12 +205,12 @@ def solve_rank_1_b_case(A: np.ndarray, B: np.ndarray, C: np.ndarray,
         range_direction = U[:, 0]
         
         if np.linalg.norm(rhs) < 1e-12:
-            # rhs = 0, so we need B[cos(th2), sin(th2)] = 0
-            # For rank-1 B, this means we need [cos(th2), sin(th2)] in the null space of B
+            # rhs = 0, so we need B[cos(θ₂), sin(θ₂)] = 0
+            # For rank-1 B, this means we need [cos(θ₂), sin(θ₂)] in the null space of B
             null_space_input = Vt[1, :]  # Null space direction in input space
             
-            # [cos(th2), sin(th2)] = t * null_space_input for some scalar t
-            # But we also need cos²(th2) + sin²(th2) = 1
+            # [cos(θ₂), sin(θ₂)] = t * null_space_input for some scalar t
+            # But we also need cos²(θ₂) + sin²(θ₂) = 1
             # So |t|² * ||null_space_input||² = 1, which gives |t| = 1 (since null_space_input is unit)
             
             for t in [1, -1]:
@@ -234,7 +234,7 @@ def solve_rank_1_b_case(A: np.ndarray, B: np.ndarray, C: np.ndarray,
                             'note': 'null space solution'
                         })
                         if verbose:
-                            print(f"  ✓ Found solution: th2 = {th2:.6f}")
+                            print(f"  ✓ Found solution: θ₂ = {th2:.6f}")
         else:
             # Check if rhs is parallel to range_direction
             rhs_unit = rhs / np.linalg.norm(rhs)
@@ -242,10 +242,10 @@ def solve_rank_1_b_case(A: np.ndarray, B: np.ndarray, C: np.ndarray,
             
             if dot_product > 1 - 1e-8:  # Parallel enough
                 # rhs is in the range of B
-                # We need to solve: B[cos(th2), sin(th2)] = rhs
+                # We need to solve: B[cos(θ₂), sin(θ₂)] = rhs
                 # For rank-1 B = σ₁ * u₁ * v₁^T, this gives:
-                # σ₁ * u₁ * (v₁^T [cos(th2), sin(th2)]) = rhs
-                # So: v₁^T [cos(th2), sin(th2)] = (u₁^T rhs) / σ₁
+                # σ₁ * u₁ * (v₁^T [cos(θ₂), sin(θ₂)]) = rhs
+                # So: v₁^T [cos(θ₂), sin(θ₂)] = (u₁^T rhs) / σ₁
                 
                 sigma1 = analysis['singular_values'][0]
                 u1 = U[:, 0]
@@ -255,11 +255,11 @@ def solve_rank_1_b_case(A: np.ndarray, B: np.ndarray, C: np.ndarray,
                 
                 if verbose:
                     print(f"rhs is in range of B")
-                    print(f"Required projection: v₁^T [cos(th2), sin(th2)] = {required_projection:.6f}")
-                    print(f"This gives: {v1[0]:.6f}*cos(th2) + {v1[1]:.6f}*sin(th2) = {required_projection:.6f}")
+                    print(f"Required projection: v₁^T [cos(θ₂), sin(θ₂)] = {required_projection:.6f}")
+                    print(f"This gives: {v1[0]:.6f}*cos(θ₂) + {v1[1]:.6f}*sin(θ₂) = {required_projection:.6f}")
                 
-                # Solve: v1[0]*cos(th2) + v1[1]*sin(th2) = required_projection
-                # with constraint cos²(th2) + sin²(th2) = 1
+                # Solve: v1[0]*cos(θ₂) + v1[1]*sin(θ₂) = required_projection
+                # with constraint cos²(θ₂) + sin²(θ₂) = 1
                 th2_solutions = solve_trigonometric_equation(v1[0], v1[1], -required_projection, verbose)
                 
                 for th2 in th2_solutions:
@@ -279,7 +279,7 @@ def solve_rank_1_b_case(A: np.ndarray, B: np.ndarray, C: np.ndarray,
                             'note': 'rank-1 solution'
                         })
                         if verbose:
-                            print(f"  ✓ Found solution: th2 = {th2:.6f}")
+                            print(f"  ✓ Found solution: θ₂ = {th2:.6f}")
             elif verbose:
                 print(f"  rhs not in range of B (dot product = {dot_product:.6f})")
     
@@ -419,14 +419,14 @@ def solve_both_singular_case(A: np.ndarray, C: np.ndarray, verbose: bool = False
         print("\nCase: Both A and B are singular")
         print("System may be underdetermined or inconsistent")
     
-    # Analyze the system A[cos(th1), sin(th1)] = C
+    # Analyze the system A[cos(θ₁), sin(θ₁)] = C
     rank_A = np.linalg.matrix_rank(A)
     
     if rank_A == 0:
         # A is zero matrix
         if np.allclose(C, 0):
             if verbose:
-                print("A = 0 and C = 0: All (th1,th2) are solutions")
+                print("A = 0 and C = 0: All (θ₁,θ₂) are solutions")
             # Return some representative solutions
             for i in range(4):
                 th1 = math.pi * i / 2
@@ -455,7 +455,7 @@ def solve_both_singular_case(A: np.ndarray, C: np.ndarray, verbose: bool = False
             cos_th1, sin_th1 = trig_candidate[0], trig_candidate[1]
             if abs(cos_th1**2 + sin_th1**2 - 1) < 1e-10:
                 th1 = math.atan2(sin_th1, cos_th1)
-                # th2 is still free
+                # θ₂ is still free
                 for th2 in [0, math.pi/2, math.pi, 3*math.pi/2]:
                     solutions.append({
                         'th1': th1,
@@ -464,7 +464,7 @@ def solve_both_singular_case(A: np.ndarray, C: np.ndarray, verbose: bool = False
                         'sin_th1': sin_th1,
                         'cos_th2': math.cos(th2),
                         'sin_th2': math.sin(th2),
-                        'note': 'th2 free, rank-1 A'
+                        'note': 'θ₂ free, rank-1 A'
                     })
     
     return solutions
@@ -513,7 +513,7 @@ def solve_singular_b_system(A: np.ndarray, B: np.ndarray, C: np.ndarray,
 
 def solve_trigonometric_system(A, B, C, verbose=False, real_solutions_only=True):
     """
-    Solve the trigonometric system A[cos th1, sin th1] + B[cos th2, sin th2] = C.
+    Solve the trigonometric system A[cos θ₁, sin θ₁] + B[cos θ₂, sin θ₂] = C.
     
     This function automatically handles both regular and singular B matrices.
     
@@ -531,7 +531,7 @@ def solve_trigonometric_system(A, B, C, verbose=False, real_solutions_only=True)
     solutions = []
     
     if verbose:
-        print("Solving system: A[cos th1, sin th1] + B[cos th2, sin th2] = C")
+        print("Solving system: A[cos θ₁, sin θ₁] + B[cos θ₂, sin θ₂] = C")
         print(f"A = \n{A}")
         print(f"B = \n{B}") 
         print(f"C = {C}")
@@ -557,8 +557,8 @@ def solve_trigonometric_system(A, B, C, verbose=False, real_solutions_only=True)
     C0, C1 = C[0], C[1]
     
     if verbose:
-        print(f"\nStep 1: Express cos(th2) and sin(th2) in terms of cos(th1) and sin(th1)")
-        print(f"From B[cos(th2), sin(th2)]^T = C - A[cos(th1), sin(th1)]^T")
+        print(f"\nStep 1: Express cos(θ₂) and sin(θ₂) in terms of cos(θ₁) and sin(θ₁)")
+        print(f"From B[cos(θ₂), sin(θ₂)]^T = C - A[cos(θ₁), sin(θ₁)]^T")
     
     # Step 2: Build the quartic polynomial coefficients directly
     # This implements the full symbolic derivation numerically
@@ -681,25 +681,25 @@ def solve_trigonometric_system(A, B, C, verbose=False, real_solutions_only=True)
         if np.iscomplex(t) and abs(t.imag) <= 1e-10:
             t = t.real
         
-        # Step 5: Convert t back to cos(th1) and sin(th1) using inverse Weierstrass substitution
+        # Step 5: Convert t back to cos(θ₁) and sin(θ₁) using inverse Weierstrass substitution
         denominator = 1 + t**2
         cos_th1 = (1 - t**2) / denominator
         sin_th1 = 2*t / denominator
         
         if verbose:
             if np.iscomplex(cos_th1) or np.iscomplex(sin_th1):
-                print(f"  cos(th1) = {cos_th1}, sin(th1) = {sin_th1}")
+                print(f"  cos(θ₁) = {cos_th1}, sin(θ₁) = {sin_th1}")
             else:
-                print(f"  cos(th1) = {cos_th1:.6f}, sin(th1) = {sin_th1:.6f}")
+                print(f"  cos(θ₁) = {cos_th1:.6f}, sin(θ₁) = {sin_th1:.6f}")
         
         # Verify trigonometric identity (allow complex values if real_solutions_only=False)
         identity_check = cos_th1**2 + sin_th1**2 - 1
         if abs(identity_check) > 1e-10:
             if verbose:
-                print(f"  Failed trigonometric identity check for th1 (error: {identity_check})")
+                print(f"  Failed trigonometric identity check for θ₁ (error: {identity_check})")
             continue
             
-        # Calculate th1 from cos_th1 and sin_th1 (handle complex case)
+        # Calculate θ₁ from cos_th1 and sin_th1 (handle complex case)
         if np.iscomplex(cos_th1) or np.iscomplex(sin_th1):
             if real_solutions_only:
                 if verbose:
@@ -713,7 +713,7 @@ def solve_trigonometric_system(A, B, C, verbose=False, real_solutions_only=True)
         else:
             th1 = math.atan2(sin_th1, cos_th1)
         
-        # Step 6: Solve for cos(th2) and sin(th2) using the original equations
+        # Step 6: Solve for cos(θ₂) and sin(θ₂) using the original equations
         # B * [cos_th2, sin_th2]^T = C - A * [cos_th1, sin_th1]^T
         rhs = C - A @ np.array([cos_th1, sin_th1])
         
@@ -722,27 +722,27 @@ def solve_trigonometric_system(A, B, C, verbose=False, real_solutions_only=True)
             cos_th2, sin_th2 = trig_th2[0], trig_th2[1]
         except np.linalg.LinAlgError:
             if verbose:
-                print("  Failed to solve for cos(th2), sin(th2)")
+                print("  Failed to solve for cos(θ₂), sin(θ₂)")
             continue
             
         if verbose:
             if np.iscomplex(cos_th2) or np.iscomplex(sin_th2):
-                print(f"  cos(th2) = {cos_th2}, sin(th2) = {sin_th2}")
+                print(f"  cos(θ₂) = {cos_th2}, sin(θ₂) = {sin_th2}")
             else:
-                print(f"  cos(th2) = {cos_th2:.6f}, sin(th2) = {sin_th2:.6f}")
+                print(f"  cos(θ₂) = {cos_th2:.6f}, sin(θ₂) = {sin_th2:.6f}")
             
-        # Verify trigonometric identity for th2 (allow complex values if real_solutions_only=False)
+        # Verify trigonometric identity for θ₂ (allow complex values if real_solutions_only=False)
         identity_check_th2 = cos_th2**2 + sin_th2**2 - 1
         if abs(identity_check_th2) > 1e-10:
             if verbose:
-                print(f"  Failed trigonometric identity check for th2 (error: {identity_check_th2})")
+                print(f"  Failed trigonometric identity check for θ₂ (error: {identity_check_th2})")
             continue
             
-        # Calculate th2 from cos_th2 and sin_th2 (handle complex case)
+        # Calculate θ₂ from cos_th2 and sin_th2 (handle complex case)
         if np.iscomplex(cos_th2) or np.iscomplex(sin_th2):
             if real_solutions_only:
                 if verbose:
-                    print("  Skipping complex trigonometric values for th2 (real_solutions_only=True)")
+                    print("  Skipping complex trigonometric values for θ₂ (real_solutions_only=True)")
                 continue
             else:
                 # For complex case, use complex atan2 equivalent
@@ -753,7 +753,7 @@ def solve_trigonometric_system(A, B, C, verbose=False, real_solutions_only=True)
             th2 = math.atan2(sin_th2, cos_th2)
         
         # Step 7: Verify the original equations
-        # This checks if the solution satisfies A[cos th1, sin th1] + B[cos th2, sin th2] = C
+        # This checks if the solution satisfies A[cos θ₁, sin θ₁] + B[cos θ₂, sin θ₂] = C
         # Multiple valid solutions are expected for trigonometric systems
         eq1_residual = A[0,0]*cos_th1 + A[0,1]*sin_th1 + B[0,0]*cos_th2 + B[0,1]*sin_th2 - C[0]
         eq2_residual = A[1,0]*cos_th1 + A[1,1]*sin_th1 + B[1,0]*cos_th2 + B[1,1]*sin_th2 - C[1]
@@ -784,9 +784,9 @@ def solve_trigonometric_system(A, B, C, verbose=False, real_solutions_only=True)
             if verbose:
                 solution_type = "complex" if is_complex_solution else "real"
                 if np.iscomplex(th1) or np.iscomplex(th2):
-                    print(f"  ✓ Valid {solution_type} solution: th1 = {th1}, th2 = {th2}")
+                    print(f"  ✓ Valid {solution_type} solution: θ₁ = {th1}, θ₂ = {th2}")
                 else:
-                    print(f"  ✓ Valid {solution_type} solution: th1 = {th1:.6f}, th2 = {th2:.6f}")
+                    print(f"  ✓ Valid {solution_type} solution: θ₁ = {th1:.6f}, θ₂ = {th2:.6f}")
         elif verbose:
             print("  ✗ Failed equation verification")
     
@@ -809,8 +809,8 @@ def test_solver():
     sin_th2_true = math.sin(th2_true)
     
     print(f"TRUE SOLUTION:")
-    print(f"  th1 = {th1_true:.6f} rad ({math.degrees(th1_true):.1f}°)")
-    print(f"  th2 = {th2_true:.6f} rad ({math.degrees(th2_true):.1f}°)")
+    print(f"  θ₁ = {th1_true:.6f} rad ({math.degrees(th1_true):.1f}°)")
+    print(f"  θ₂ = {th2_true:.6f} rad ({math.degrees(th2_true):.1f}°)")
     
     # Define test matrices
     A = np.array([[2.0, 1.0],
@@ -838,8 +838,8 @@ def test_solver():
     
     for i, sol in enumerate(solutions):
         print(f"\nSolution {i+1}:")
-        print(f"  th1 = {sol['th1']:.6f} rad ({math.degrees(sol['th1']):.1f}°)")
-        print(f"  th2 = {sol['th2']:.6f} rad ({math.degrees(sol['th2']):.1f}°)")
+        print(f"  θ₁ = {sol['th1']:.6f} rad ({math.degrees(sol['th1']):.1f}°)")
+        print(f"  θ₂ = {sol['th2']:.6f} rad ({math.degrees(sol['th2']):.1f}°)")
         
         # Check accuracy against known solution
         th1_error = abs(sol['th1'] - th1_true)
@@ -952,9 +952,9 @@ def test_singular_cases():
     C1 = A1 @ np.array([cos_th1_true, sin_th1_true])
     
     print(f"TRUE SOLUTION:")
-    print(f"  th1 = {th1_true:.6f} rad ({math.degrees(th1_true):.1f}°) [determined]")
-    print(f"  th2 = free parameter")
-    print("  ⚠️  WARNING: th2 is a free parameter")
+    print(f"  θ₁ = {th1_true:.6f} rad ({math.degrees(th1_true):.1f}°) [determined]")
+    print(f"  θ₂ = free parameter")
+    print("  ⚠️  WARNING: θ₂ is a free parameter")
     
     solutions1 = solve_trigonometric_system(A1, B1, C1, verbose=False, real_solutions_only=True)
     print(f"\nSOLVER RESULTS:")
@@ -963,9 +963,9 @@ def test_singular_cases():
     
     for i, sol in enumerate(solutions1):
         if i < 3:  # Show first 3 representative solutions
-            print(f"  Solution {i+1}: th1 = {sol['th1']:.6f} rad, th2 = {sol['th2']:.6f} rad")
+            print(f"  Solution {i+1}: θ₁ = {sol['th1']:.6f} rad, θ₂ = {sol['th2']:.6f} rad")
     if len(solutions1) > 3:
-        print(f"  ... and {len(solutions1)-3} more with different th2 values")
+        print(f"  ... and {len(solutions1)-3} more with different θ₂ values")
     
     # Test Case 2: B has rank 1 with 4 real solutions
     print("\nTEST CASE 2: B has rank 1 (4 Real Solutions)")
@@ -989,24 +989,24 @@ def test_singular_cases():
     print(f"Found {len(solutions2)} real solutions")
     
     for i, sol in enumerate(solutions2):
-        print(f"  Solution {i+1}: th1 = {sol['th1']:.6f} rad ({math.degrees(sol['th1']):.1f}°), th2 = {sol['th2']:.6f} rad ({math.degrees(sol['th2']):.1f}°)")
+        print(f"  Solution {i+1}: θ₁ = {sol['th1']:.6f} rad ({math.degrees(sol['th1']):.1f}°), θ₂ = {sol['th2']:.6f} rad ({math.degrees(sol['th2']):.1f}°)")
     
     if len(solutions2) == 4:
         print("✓ SUCCESS: Found exactly 4 real solutions for rank-1 case!")
         
-        # Group solutions by th1 value to show the 2×2 structure
+        # Group solutions by θ₁ value to show the 2×2 structure
         th1_groups = {}
         for sol in solutions2:
-            th1_key = round(sol['th1'], 3)  # Round to group similar th1 values
+            th1_key = round(sol['th1'], 3)  # Round to group similar θ₁ values
             if th1_key not in th1_groups:
                 th1_groups[th1_key] = []
             th1_groups[th1_key].append(sol)
         
-        print(f"Solution structure: {len(th1_groups)} distinct th1 values × 2 th2 values each")
+        print(f"Solution structure: {len(th1_groups)} distinct θ₁ values × 2 θ₂ values each")
         for th1_key, group in th1_groups.items():
             th1_deg = math.degrees(th1_key)
             th2_values = [round(sol['th2'], 3) for sol in group]
-            print(f"  th1 ≈ {th1_key:.3f} rad ({th1_deg:.1f}°): th2 = {th2_values}")
+            print(f"  θ₁ ≈ {th1_key:.3f} rad ({th1_deg:.1f}°): θ₂ = {th2_values}")
     else:
         print(f"⚠️  Note: Found {len(solutions2)} solutions (expected 4)")
         
@@ -1029,10 +1029,10 @@ def test_singular_cases():
     C3 = A3 @ np.array([cos_th1_true, sin_th1_true]) + B3 @ np.array([cos_th2_true, sin_th2_true])
     
     print(f"TRUE SOLUTION:")
-    print(f"  th1 = {th1_true:.6f} rad ({math.degrees(th1_true):.1f}°)")
-    print(f"  th2 = {th2_true:.6f} rad ({math.degrees(th2_true):.1f}°)")
-    print(f"  (cos(th1), sin(th1)) = ({cos_th1_true:.6f}, {sin_th1_true:.6f})")
-    print(f"  (cos(th2), sin(th2)) = ({cos_th2_true:.6f}, {sin_th2_true:.6f})")
+    print(f"  θ₁ = {th1_true:.6f} rad ({math.degrees(th1_true):.1f}°)")
+    print(f"  θ₂ = {th2_true:.6f} rad ({math.degrees(th2_true):.1f}°)")
+    print(f"  (cos(θ₁), sin(θ₁)) = ({cos_th1_true:.6f}, {sin_th1_true:.6f})")
+    print(f"  (cos(θ₂), sin(θ₂)) = ({cos_th2_true:.6f}, {sin_th2_true:.6f})")
     
     solutions3 = solve_trigonometric_system(A3, B3, C3, verbose=False, real_solutions_only=True)
     print(f"\nSOLVER RESULTS:")
@@ -1040,7 +1040,7 @@ def test_singular_cases():
     print(f"Found {len(solutions3)} real solutions")
     
     for i, sol in enumerate(solutions3):
-        print(f"  Solution {i+1}: th1 = {sol['th1']:.6f} rad ({math.degrees(sol['th1']):.1f}°), th2 = {sol['th2']:.6f} rad ({math.degrees(sol['th2']):.1f}°)")
+        print(f"  Solution {i+1}: θ₁ = {sol['th1']:.6f} rad ({math.degrees(sol['th1']):.1f}°), θ₂ = {sol['th2']:.6f} rad ({math.degrees(sol['th2']):.1f}°)")
         
         # Check if this matches the true solution
         th1_error = min(abs(sol['th1'] - th1_true), 
@@ -1059,8 +1059,8 @@ def test_singular_cases():
         print(f"⚠️  ANALYSIS: Found {len(solutions3)} solutions for rank-1 case")
         print("   This is mathematically correct! Not all rank-1 cases yield 4 solutions.")
         print("   From the detailed output above, we can see:")
-        print("   - For th1 = 0.523599: Found 2 valid th2 solutions")  
-        print("   - For th1 = -2.737896: Discriminant < 0, so no real th2 solutions")
+        print("   - For θ₁ = 0.523599: Found 2 valid θ₂ solutions")  
+        print("   - For θ₁ = -2.737896: Discriminant < 0, so no real θ₂ solutions")
         print("   The number of solutions depends on the geometric configuration.")
         print("   This demonstrates the solver correctly handles edge cases.")
         
@@ -1087,8 +1087,8 @@ def test_singular_cases():
     C4 = A4 @ np.array([cos_th1_true4, sin_th1_true4]) + B4 @ np.array([cos_th2_true4, sin_th2_true4])
     
     print(f"TRUE SOLUTION:")
-    print(f"  th1 = {th1_true4:.6f} rad ({math.degrees(th1_true4):.1f}°)")
-    print(f"  th2 = {th2_true4:.6f} rad ({math.degrees(th2_true4):.1f}°)")
+    print(f"  θ₁ = {th1_true4:.6f} rad ({math.degrees(th1_true4):.1f}°)")
+    print(f"  θ₂ = {th2_true4:.6f} rad ({math.degrees(th2_true4):.1f}°)")
     
     solutions4 = solve_trigonometric_system(A4, B4, C4, verbose=False, real_solutions_only=True)
     print(f"\nSOLVER RESULTS:")
@@ -1096,7 +1096,7 @@ def test_singular_cases():
     print(f"Found {len(solutions4)} real solutions")
     
     for i, sol in enumerate(solutions4):
-        print(f"  Solution {i+1}: th1 = {sol['th1']:.6f} rad ({math.degrees(sol['th1']):.1f}°), th2 = {sol['th2']:.6f} rad ({math.degrees(sol['th2']):.1f}°)")
+        print(f"  Solution {i+1}: θ₁ = {sol['th1']:.6f} rad ({math.degrees(sol['th1']):.1f}°), θ₂ = {sol['th2']:.6f} rad ({math.degrees(sol['th2']):.1f}°)")
         
         # Check if this matches the true solution
         th1_error = min(abs(sol['th1'] - th1_true4), 
@@ -1115,7 +1115,7 @@ def test_singular_cases():
     print("SUMMARY")
     print("="*80)
     print("✓ Extended solver handles singular B matrices correctly")
-    print("✓ Zero matrix case: reduces to A[cos(th1), sin(th1)] = C with th2 as free parameter")
+    print("✓ Zero matrix case: reduces to A[cos(θ₁), sin(θ₁)] = C with θ₂ as free parameter")
     print("✓ Rank-1 matrix case: uses null space approach with variable solution count")
     print("✓ Four-solution example: rank-1 case with A=I, B=[[2,2],[1,1]]")
     print("✓ Two-solution example: rank-1 case with A=I, B=[[1,2],[0.5,1]]")
