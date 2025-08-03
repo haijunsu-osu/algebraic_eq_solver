@@ -88,13 +88,13 @@ def solve_command(args):
 
 def test_command(args):
     """Handle the test command"""
-    if args.test_type == 'basic':
+    if args.type == 'basic':
         test_solver()
-    elif args.test_type == 'random':
+    elif args.type == 'random':
         test_multiple_cases()
-    elif args.test_type == 'singular':
+    elif args.type == 'singular':
         test_singular_cases()
-    elif args.test_type == 'all':
+    elif args.type == 'all':
         print("Running all tests...\n")
         test_solver()
         test_multiple_cases()
