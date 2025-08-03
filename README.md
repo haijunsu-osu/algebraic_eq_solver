@@ -54,39 +54,39 @@ C = np.array([1.0, 2.0])
 
 # Solve the system
 solutions = solve_trig_sys(A, B, C)
-for i, (th1, th2) in enumerate(solutions):
-    print(f"Solution {i+1}: θ₁ = {th1:.6f}, θ₂ = {th2:.6f}")
-```
-cd algebraic_eq_solver
-pip install -e .
-```
-
-### As a Dependency
-```bash
-pip install git+https://github.com/haijunsu-osu/algebraic_eq_solver.git
+for i, sol in enumerate(solutions):
+    print(f"Solution {i+1}:")
+    print(f"  θ₁ = {sol['th1']:.6f} rad")
+    print(f"  θ₂ = {sol['th2']:.6f} rad")
 ```
 
-## Quick Start
+### Advanced Usage
+
+For more detailed output and handling of singular matrices:
 
 ```python
 import numpy as np
 from algebraic_eq_solver import solve_trig_sys
 
-# Define your system matrices
-A = np.array([[2.0, 1.0],
-              [1.0, 3.0]])
-B = np.array([[1.5, -0.5],
-              [0.5, 2.0]])
-C = np.array([1.0, 2.0])
+# Regular system
+A = np.array([[2.0, 1.0], [1.0, 3.0]])
+B = np.array([[1.5, -0.5], [0.5, 2.0]])
+C = np.array([2.939, 4.134])
 
-# Solve the system
+# Solve with verbose output
 solutions = solve_trig_sys(A, B, C, verbose=True)
 
-# Process results
-for i, sol in enumerate(solutions):
-    print(f"Solution {i+1}:")
-    print(f"  θ₁ = {sol['th1']:.6f} rad")
-    print(f"  θ₂ = {sol['th2']:.6f} rad")
+# Singular matrix example (B = 0)
+A_singular = np.array([[1.0, 0.5], [0.3, 1.2]])
+B_singular = np.array([[0.0, 0.0], [0.0, 0.0]])  # Zero matrix
+
+# Generate valid C for singular case
+cos_th1, sin_th1 = 0.8, 0.6  # cos²+sin²=1
+C_singular = A_singular @ np.array([cos_th1, sin_th1])
+
+# Solve singular case (θ₂ becomes free parameter)
+singular_solutions = solve_trig_sys(A_singular, B_singular, C_singular, verbose=True)
+print(f"Found {len(singular_solutions)} solutions (θ₂ is free parameter)")
 ```
 
 ## Mathematical Background
@@ -99,75 +99,11 @@ This solver implements a complete analytical approach to solving trigonometric s
 4. **Quartic Polynomial**: Derive a single quartic polynomial in variable `t`
 5. **Numerical Solution**: Solve using `numpy.roots()` and convert back to `(θ₁,θ₂)`
 
-## 📁 Project Structure
+##  Key Features
 
-```
-algebraic_eq_solver/
-├── README.md                    # This file
-├── numerical_solver.py          # Main numerical solver with extended capabilities
-├── symbolic_derivation.py       # Complete symbolic derivation using SymPy
-├── symbolic_coefficients.py     # Detailed quartic coefficient expressions
-└── complete_analysis.py         # End-to-end demonstration
-```
-
-## 🚀 Quick Start
-
-### Prerequisites
-
-```bash
-pip install numpy sympy
-```
-
-### Basic Usage
-
-The main solver automatically handles both regular and singular B matrices:
-
-```python
-import numpy as np
-from numerical_solver import solve_trig_sys
-
-# Define the system matrices
-A = np.array([[2.0, 1.0],
-              [1.0, 3.0]])
-
-B = np.array([[1.5, -0.5],
-              [0.5, 2.0]])
-
-C = np.array([2.939, 4.134])
-
-# Solve the system (automatically handles singular B)
-solutions = solve_trig_sys(A, B, C)
-
-# Display results
-for i, sol in enumerate(solutions):
-    print(f"Solution {i+1}: θ₁ = {sol['th1']:.6f}, θ₂ = {sol['th2']:.6f}")
-```
-
-### Singular B Matrix Example
-
-```python
-# Example with B = 0 (zero matrix)
-A = np.array([[1.0, 0.5],
-              [0.3, 1.2]])
-
-B = np.array([[0.0, 0.0],  # Singular matrix
-              [0.0, 0.0]])
-
-# Choose C such that a solution exists: A[cos(θ₁), sin(θ₁)] = C
-cos_th1 = 0.8  # cos²(θ₁) + sin²(θ₁) = 1
-sin_th1 = 0.6
-C = A @ np.array([cos_th1, sin_th1])
-
-# Solve with the main solver (automatically detects singular B)
-solutions = solve_trig_sys(A, B, C, verbose=True)
-print(f"Found {len(solutions)} solutions (θ₂ is free parameter)")
-```
-
-## 📊 Key Features
-
-### ✅ Unified Solver (`numerical_solver.py`)
+### ✅ Unified Solver
 - **Automatic singular matrix detection** - Handles both regular and singular B matrices
-- **Pure numerical implementation** - No SymPy dependency for solving
+- **Pure numerical implementation** - No SymPy dependency for solving solving
 - **Fast execution** - Sub-millisecond solving time for regular cases
 - **Robust validation** - Comprehensive error checking
 - **Multiple solutions** - Finds all valid solutions
@@ -200,20 +136,28 @@ print(f"Found {len(solutions)} solutions (θ₂ is free parameter)")
 ### Run All Tests
 
 ```bash
-python numerical_solver.py
+# Run comprehensive test suite
+trig-solver test --type all
+
+# Run basic tests only
+trig-solver test --type basic
 ```
 
 ### Test Individual Components
 
 ```bash
-# Test symbolic derivation
+# Test with specific matrices
+trig-solver solve -A "[[2,1],[1,3]]" -B "[[1.5,-0.5],[0.5,2]]" -C "[1,2]" --verbose
+
+# Test symbolic derivation (if available)
 python symbolic_derivation.py
 
-# View detailed coefficient expressions
+# View detailed coefficient expressions (if available)
 python symbolic_coefficients.py
 
-# Run complete analysis
+# Run complete analysis (if available)
 python complete_analysis.py
+```
 
 
 ### Sample Test Results
