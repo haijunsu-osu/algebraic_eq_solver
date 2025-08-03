@@ -133,177 +133,280 @@ def solve_zero_b_case(A: np.ndarray, C: np.ndarray, verbose: bool = False) -> Li
 def solve_rank_1_b_case(A: np.ndarray, B: np.ndarray, C: np.ndarray, 
                        analysis: Dict, verbose: bool = False) -> List[Dict[str, float]]:
     """
-    Solve the case where B has rank 1.
+    Solve the case where B has rank 1 using null space approach.
     
-    In this case, B[cos(y), sin(y)] can only produce vectors in a specific direction.
-    We need to find points [cos(y), sin(y)] on the unit circle such that 
-    B[cos(y), sin(y)] = C - A[cos(x), sin(x)] for some valid (x,y).
+    Strategy:
+    1. Find null space of B^T (left null space of B)
+    2. Left multiply the system by the null vector to eliminate y terms
+    3. Solve the resulting equation in x only: a*cos(x) + b*sin(x) + c = 0
+    4. For each solution x, substitute back to solve for y
     """
     solutions = []
     
     if verbose:
-        print("\nCase: B has rank 1")
-        print("B can only produce vectors in one direction")
+        print("\nCase: B has rank 1 - using null space approach")
+        print("Step 1: Find null space of B^T to eliminate y terms")
     
-    # Get the range direction of B (where B can map to)
+    # Find the null space of B^T (left null space of B)
+    # For rank-1 matrix, the null space is 1-dimensional
     U = analysis['U']
-    s = analysis['singular_values']
     Vt = analysis['Vt']
     
-    # B = U * diag(s) * Vt, but only first singular value is non-zero
-    # So B = s[0] * U[:, 0:1] * Vt[0:1, :]
-    range_direction = U[:, 0]  # Direction B can produce
-    domain_direction = Vt[0, :]  # Direction in input space
+    # The second column of U spans the left null space of B
+    null_vector = U[:, 1]  # This is orthogonal to the range of B
     
     if verbose:
-        print(f"B range direction: {range_direction}")
-        print(f"B domain direction: {domain_direction}")
-        print(f"Non-zero singular value: {s[0]:.6f}")
+        print(f"Left null vector of B: {null_vector}")
+        print(f"Verification: null_vector^T @ B = {null_vector @ B}")
     
-    # For rank-1 matrix B, we have B = s[0] * u * v^T where u and v are unit vectors
-    # So B[cos(y), sin(y)] = s[0] * u * (v^T [cos(y), sin(y)])
-    # This means B can only produce vectors parallel to u
+    # Left multiply the original system by null_vector:
+    # A[cos(x), sin(x)] + B[cos(y), sin(y)] = C
+    # null_vector^T @ (A[cos(x), sin(x)] + B[cos(y), sin(y)]) = null_vector^T @ C
+    # null_vector^T @ A[cos(x), sin(x)] + null_vector^T @ B[cos(y), sin(y)] = null_vector^T @ C
+    # Since null_vector^T @ B = 0:
+    # null_vector^T @ A[cos(x), sin(x)] = null_vector^T @ C
+    
+    left_A = null_vector @ A  # 1x2 vector
+    right_C = null_vector @ C  # scalar
     
     if verbose:
-        print("Searching for valid (x,y) pairs...")
+        print(f"Step 2: Transformed equation in x only:")
+        print(f"[{left_A[0]:.6f}, {left_A[1]:.6f}] @ [cos(x), sin(x)] = {right_C:.6f}")
+        print(f"Or: {left_A[0]:.6f}*cos(x) + {left_A[1]:.6f}*sin(x) = {right_C:.6f}")
+        print(f"Rearranged: {left_A[0]:.6f}*cos(x) + {left_A[1]:.6f}*sin(x) + {-right_C:.6f} = 0")
     
-    # Strategy: For each possible x, check if the required B[cos(y), sin(y)] 
-    # can be achieved by some point on the unit circle
+    # Solve the trigonometric equation: left_A[0]*cos(x) + left_A[1]*sin(x) + (-right_C) = 0
+    x_solutions = solve_trigonometric_equation(left_A[0], left_A[1], -right_C, verbose)
     
-    num_samples = 72  # Every 5 degrees for better coverage
-    for i in range(num_samples):
-        x = 2 * math.pi * i / num_samples
+    if verbose:
+        print(f"Step 3: Found {len(x_solutions)} solutions for x")
+    
+    # For each x solution, substitute back into the original system to solve for y
+    for i, x in enumerate(x_solutions):
         cos_x = math.cos(x)
         sin_x = math.sin(x)
         
-        # Compute required vector: B[cos(y), sin(y)] = C - A[cos(x), sin(x)]
-        required_vector = C - A @ np.array([cos_x, sin_x])
+        if verbose:
+            print(f"\nStep 4.{i+1}: Solving for y with x = {x:.6f}")
+            print(f"cos(x) = {cos_x:.6f}, sin(x) = {sin_x:.6f}")
         
-        if verbose and i < 3:  # Show first few iterations
-            print(f"\n  x = {x:.3f}: required_vector = {required_vector}")
+        # Substitute x back into original system: A[cos(x), sin(x)] + B[cos(y), sin(y)] = C
+        # B[cos(y), sin(y)] = C - A[cos(x), sin(x)]
+        rhs = C - A @ np.array([cos_x, sin_x])
         
-        # Check if required_vector is in the range of B (parallel to range_direction)
-        if np.linalg.norm(required_vector) < 1e-12:
-            # Required vector is zero, so we need B[cos(y), sin(y)] = 0
-            # This is only possible if B = 0, but we're in rank-1 case
-            continue
+        if verbose:
+            print(f"Right-hand side for y equation: {rhs}")
         
-        # Check if required_vector is parallel to range_direction
-        required_unit = required_vector / np.linalg.norm(required_vector)
-        dot_product = abs(np.dot(required_unit, range_direction))
+        # Since B has rank 1, the system B[cos(y), sin(y)] = rhs may have:
+        # - No solution if rhs is not in the range of B
+        # - Infinite solutions if rhs is in the range of B
         
-        if dot_product < 1 - 1e-8:  # Not parallel enough
-            continue
+        # Check if rhs is in the range of B (parallel to first column of U)
+        range_direction = U[:, 0]
+        
+        if np.linalg.norm(rhs) < 1e-12:
+            # rhs = 0, so we need B[cos(y), sin(y)] = 0
+            # For rank-1 B, this means we need [cos(y), sin(y)] in the null space of B
+            null_space_input = Vt[1, :]  # Null space direction in input space
             
-        # Required vector is in range of B
-        # Now find [cos(y), sin(y)] on unit circle such that B[cos(y), sin(y)] = required_vector
-        
-        # For rank-1 B, we have B = s[0] * range_direction * domain_direction^T
-        # So B[cos(y), sin(y)] = s[0] * range_direction * (domain_direction · [cos(y), sin(y)])
-        # We need: s[0] * range_direction * (domain_direction · [cos(y), sin(y)]) = required_vector
-        
-        # This gives us: domain_direction · [cos(y), sin(y)] = ||required_vector|| / s[0] * sign
-        # where sign accounts for the direction of required_vector vs range_direction
-        
-        required_magnitude = np.linalg.norm(required_vector)
-        
-        # Determine the correct sign by checking the direction
-        range_dot = np.dot(required_vector, range_direction)
-        sign = 1 if range_dot > 0 else -1
-        
-        required_dot_product = sign * required_magnitude / s[0]
-        
-        # We need to solve:
-        # domain_direction[0] * cos(y) + domain_direction[1] * sin(y) = required_dot_product
-        # cos²(y) + sin²(y) = 1
-        
-        # This is the intersection of a line and a circle
-        # Let d0 = domain_direction[0], d1 = domain_direction[1], k = required_dot_product
-        # d0*cos(y) + d1*sin(y) = k
-        # cos²(y) + sin²(y) = 1
-        
-        d0, d1 = domain_direction[0], domain_direction[1]
-        k = required_dot_product
-        
-        # From the line equation: cos(y) = (k - d1*sin(y)) / d0 (if d0 ≠ 0)
-        # Substituting into circle: ((k - d1*sin(y)) / d0)² + sin²(y) = 1
-        # This gives a quadratic in sin(y)
-        
-        if abs(d0) > 1e-12:  # d0 ≠ 0
-            # ((k - d1*sin(y)) / d0)² + sin²(y) = 1
-            # (k - d1*sin(y))² / d0² + sin²(y) = 1
-            # (k - d1*sin(y))² + d0²*sin²(y) = d0²
-            # k² - 2*k*d1*sin(y) + d1²*sin²(y) + d0²*sin²(y) = d0²
-            # (d1² + d0²)*sin²(y) - 2*k*d1*sin(y) + (k² - d0²) = 0
+            # [cos(y), sin(y)] = t * null_space_input for some scalar t
+            # But we also need cos²(y) + sin²(y) = 1
+            # So |t|² * ||null_space_input||² = 1, which gives |t| = 1 (since null_space_input is unit)
             
-            a = d1**2 + d0**2  # This should be 1 since domain_direction is unit vector
-            b = -2 * k * d1
-            c = k**2 - d0**2
-            
-            discriminant = b**2 - 4*a*c
-            
-            if discriminant >= 0:
-                sqrt_disc = math.sqrt(discriminant)
-                sin_y1 = (-b + sqrt_disc) / (2*a)
-                sin_y2 = (-b - sqrt_disc) / (2*a)
+            for t in [1, -1]:
+                cos_y = t * null_space_input[0]
+                sin_y = t * null_space_input[1]
                 
-                for sin_y in [sin_y1, sin_y2]:
-                    if abs(sin_y) <= 1:  # Valid sine value
-                        cos_y = (k - d1 * sin_y) / d0
-                        
-                        # Verify trigonometric identity
-                        if abs(cos_y**2 + sin_y**2 - 1) < 1e-10:
-                            y = math.atan2(sin_y, cos_y)
-                            
-                            # Verify the solution
-                            residual1 = A[0,0]*cos_x + A[0,1]*sin_x + B[0,0]*cos_y + B[0,1]*sin_y - C[0]
-                            residual2 = A[1,0]*cos_x + A[1,1]*sin_x + B[1,0]*cos_y + B[1,1]*sin_y - C[1]
-                            
-                            if abs(residual1) < 1e-10 and abs(residual2) < 1e-10:
-                                solutions.append({
-                                    'x': x,
-                                    'y': y,
-                                    'cos_x': cos_x,
-                                    'sin_x': sin_x,
-                                    'cos_y': cos_y,
-                                    'sin_y': sin_y,
-                                    'note': 'rank-1 B solution'
-                                })
-                                
-                                if verbose:
-                                    print(f"    ✓ Found solution: x={x:.3f}, y={y:.3f}")
-        
-        elif abs(d1) > 1e-12:  # d0 ≈ 0, d1 ≠ 0
-            # From line equation: sin(y) = k / d1
-            sin_y = k / d1
-            if abs(sin_y) <= 1:  # Valid sine value
-                cos_y_squared = 1 - sin_y**2
-                if cos_y_squared >= 0:
-                    for cos_y in [math.sqrt(cos_y_squared), -math.sqrt(cos_y_squared)]:
-                        y = math.atan2(sin_y, cos_y)
-                        
-                        # Verify the solution
-                        residual1 = A[0,0]*cos_x + A[0,1]*sin_x + B[0,0]*cos_y + B[0,1]*sin_y - C[0]
-                        residual2 = A[1,0]*cos_x + A[1,1]*sin_x + B[1,0]*cos_y + B[1,1]*sin_y - C[1]
-                        
-                        if abs(residual1) < 1e-10 and abs(residual2) < 1e-10:
-                            solutions.append({
-                                'x': x,
-                                'y': y,
-                                'cos_x': cos_x,
-                                'sin_x': sin_x,
-                                'cos_y': cos_y,
-                                'sin_y': sin_y,
-                                'note': 'rank-1 B solution'
-                            })
-                            
-                            if verbose:
-                                print(f"    ✓ Found solution: x={x:.3f}, y={y:.3f}")
+                # Verify trigonometric constraint
+                if abs(cos_y**2 + sin_y**2 - 1) < 1e-10:
+                    y = math.atan2(sin_y, cos_y)
+                    
+                    # Verify solution
+                    residual = A @ np.array([cos_x, sin_x]) + B @ np.array([cos_y, sin_y]) - C
+                    if np.linalg.norm(residual) < 1e-10:
+                        solutions.append({
+                            'x': x,
+                            'y': y,
+                            'cos_x': cos_x,
+                            'sin_x': sin_x,
+                            'cos_y': cos_y,
+                            'sin_y': sin_y,
+                            'note': 'null space solution'
+                        })
+                        if verbose:
+                            print(f"  ✓ Found solution: y = {y:.6f}")
+        else:
+            # Check if rhs is parallel to range_direction
+            rhs_unit = rhs / np.linalg.norm(rhs)
+            dot_product = abs(np.dot(rhs_unit, range_direction))
+            
+            if dot_product > 1 - 1e-8:  # Parallel enough
+                # rhs is in the range of B
+                # We need to solve: B[cos(y), sin(y)] = rhs
+                # For rank-1 B = σ₁ * u₁ * v₁^T, this gives:
+                # σ₁ * u₁ * (v₁^T [cos(y), sin(y)]) = rhs
+                # So: v₁^T [cos(y), sin(y)] = (u₁^T rhs) / σ₁
+                
+                sigma1 = analysis['singular_values'][0]
+                u1 = U[:, 0]
+                v1 = Vt[0, :]
+                
+                required_projection = np.dot(u1, rhs) / sigma1
+                
+                if verbose:
+                    print(f"rhs is in range of B")
+                    print(f"Required projection: v₁^T [cos(y), sin(y)] = {required_projection:.6f}")
+                    print(f"This gives: {v1[0]:.6f}*cos(y) + {v1[1]:.6f}*sin(y) = {required_projection:.6f}")
+                
+                # Solve: v1[0]*cos(y) + v1[1]*sin(y) = required_projection
+                # with constraint cos²(y) + sin²(y) = 1
+                y_solutions = solve_trigonometric_equation(v1[0], v1[1], -required_projection, verbose)
+                
+                for y in y_solutions:
+                    cos_y = math.cos(y)
+                    sin_y = math.sin(y)
+                    
+                    # Verify solution
+                    residual = A @ np.array([cos_x, sin_x]) + B @ np.array([cos_y, sin_y]) - C
+                    if np.linalg.norm(residual) < 1e-10:
+                        solutions.append({
+                            'x': x,
+                            'y': y,
+                            'cos_x': cos_x,
+                            'sin_x': sin_x,
+                            'cos_y': cos_y,
+                            'sin_y': sin_y,
+                            'note': 'rank-1 solution'
+                        })
+                        if verbose:
+                            print(f"  ✓ Found solution: y = {y:.6f}")
+            elif verbose:
+                print(f"  rhs not in range of B (dot product = {dot_product:.6f})")
     
     if verbose:
-        print(f"Found {len(solutions)} solutions for rank-1 B case")
+        print(f"\nTotal solutions found: {len(solutions)}")
     
     return solutions
+
+
+def solve_trigonometric_equation(a: float, b: float, c: float, verbose: bool = False) -> List[float]:
+    """
+    Solve the trigonometric equation: a*cos(θ) + b*sin(θ) + c = 0
+    
+    Uses Weierstrass substitution: t = tan(θ/2)
+    cos(θ) = (1-t²)/(1+t²), sin(θ) = 2t/(1+t²)
+    
+    This transforms the equation into a quadratic in t:
+    a*(1-t²)/(1+t²) + b*2t/(1+t²) + c = 0
+    a*(1-t²) + b*2t + c*(1+t²) = 0
+    a - a*t² + 2*b*t + c + c*t² = 0
+    (c-a)*t² + 2*b*t + (a+c) = 0
+    
+    Args:
+        a, b, c: Coefficients of the trigonometric equation
+        verbose: Print detailed steps
+        
+    Returns:
+        List of solutions θ in radians
+    """
+    solutions = []
+    
+    if verbose:
+        print(f"Solving: {a:.6f}*cos(θ) + {b:.6f}*sin(θ) + {c:.6f} = 0")
+    
+    # Handle special cases first
+    if abs(a) < 1e-12 and abs(b) < 1e-12:
+        if abs(c) < 1e-12:
+            if verbose:
+                print("All coefficients zero - infinite solutions")
+            # Return some representative solutions
+            return [0, math.pi/2, math.pi, 3*math.pi/2]
+        else:
+            if verbose:
+                print("No solutions - inconsistent equation")
+            return solutions
+    
+    if abs(a) < 1e-12:  # b*sin(θ) + c = 0
+        if abs(b) < 1e-12:
+            return solutions  # Already handled above
+        sin_theta = -c / b
+        if abs(sin_theta) <= 1:
+            theta1 = math.asin(sin_theta)
+            theta2 = math.pi - theta1
+            solutions.extend([theta1, theta2])
+            if verbose:
+                print(f"Linear case in sin: θ = {theta1:.6f}, {theta2:.6f}")
+        return solutions
+    
+    if abs(b) < 1e-12:  # a*cos(θ) + c = 0
+        cos_theta = -c / a
+        if abs(cos_theta) <= 1:
+            theta1 = math.acos(cos_theta)
+            theta2 = -theta1
+            solutions.extend([theta1, theta2])
+            if verbose:
+                print(f"Linear case in cos: θ = {theta1:.6f}, {theta2:.6f}")
+        return solutions
+    
+    # General case: use Weierstrass substitution
+    # (c-a)*t² + 2*b*t + (a+c) = 0
+    A_coeff = c - a
+    B_coeff = 2 * b
+    C_coeff = a + c
+    
+    if verbose:
+        print(f"Weierstrass substitution gives quadratic: {A_coeff:.6f}*t² + {B_coeff:.6f}*t + {C_coeff:.6f} = 0")
+    
+    if abs(A_coeff) < 1e-12:  # Linear equation in t
+        if abs(B_coeff) < 1e-12:
+            if abs(C_coeff) < 1e-12:
+                if verbose:
+                    print("Identity equation - infinite solutions")
+                return [0, math.pi/2, math.pi, 3*math.pi/2]
+            else:
+                if verbose:
+                    print("Inconsistent linear equation in t")
+                return solutions
+        else:
+            t = -C_coeff / B_coeff
+            theta = 2 * math.atan(t)
+            solutions.append(theta)
+            if verbose:
+                print(f"Linear case: t = {t:.6f}, θ = {theta:.6f}")
+    else:
+        # Quadratic equation in t
+        discriminant = B_coeff**2 - 4*A_coeff*C_coeff
+        if verbose:
+            print(f"Discriminant = {discriminant:.6f}")
+        
+        if discriminant >= 0:
+            sqrt_disc = math.sqrt(discriminant)
+            t1 = (-B_coeff + sqrt_disc) / (2*A_coeff)
+            t2 = (-B_coeff - sqrt_disc) / (2*A_coeff)
+            
+            theta1 = 2 * math.atan(t1)
+            theta2 = 2 * math.atan(t2)
+            
+            solutions.extend([theta1, theta2])
+            if verbose:
+                print(f"Quadratic solutions: t1 = {t1:.6f} → θ1 = {theta1:.6f}")
+                print(f"                     t2 = {t2:.6f} → θ2 = {theta2:.6f}")
+        elif verbose:
+            print("No real solutions - negative discriminant")
+    
+    # Normalize angles to [-π, π]
+    normalized_solutions = []
+    for theta in solutions:
+        while theta > math.pi:
+            theta -= 2*math.pi
+        while theta < -math.pi:
+            theta += 2*math.pi
+        normalized_solutions.append(theta)
+    
+    if verbose:
+        print(f"Found {len(normalized_solutions)} solutions")
+    
+    return normalized_solutions
 
 
 def solve_both_singular_case(A: np.ndarray, C: np.ndarray, verbose: bool = False) -> List[Dict[str, float]]:
