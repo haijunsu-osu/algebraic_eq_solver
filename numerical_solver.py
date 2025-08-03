@@ -237,7 +237,12 @@ def solve_rank_1_b_case(A: np.ndarray, B: np.ndarray, C: np.ndarray,
                             print(f"  ✓ Found solution: θ₂ = {th2:.6f}")
         else:
             # Check if rhs is parallel to range_direction
-            rhs_unit = rhs / np.linalg.norm(rhs)
+            rhs_norm = np.linalg.norm(rhs)
+            if rhs_norm < 1e-12:
+                if verbose:
+                    print(f"  rhs has zero norm - no solution for θ₂")
+                continue
+            rhs_unit = rhs / rhs_norm
             dot_product = abs(np.dot(rhs_unit, range_direction))
             
             if dot_product > 1 - 1e-8:  # Parallel enough
@@ -250,6 +255,12 @@ def solve_rank_1_b_case(A: np.ndarray, B: np.ndarray, C: np.ndarray,
                 sigma1 = analysis['singular_values'][0]
                 u1 = U[:, 0]
                 v1 = Vt[0, :]
+                
+                # Check for degenerate singular value
+                if abs(sigma1) < 1e-12:
+                    if verbose:
+                        print(f"  Degenerate singular value σ₁ = {sigma1:.2e} - skipping")
+                    continue
                 
                 required_projection = np.dot(u1, rhs) / sigma1
                 
@@ -530,6 +541,20 @@ def solve_trig_sys(A, B, C, verbose=False, real_solutions_only=True):
     """
     solutions = []
     
+    # Input validation
+    A = np.asarray(A, dtype=float)
+    B = np.asarray(B, dtype=float) 
+    C = np.asarray(C, dtype=float)
+    
+    if A.shape != (2, 2) or B.shape != (2, 2) or C.shape != (2,):
+        raise ValueError("Invalid input dimensions: A and B must be 2x2, C must be 2x1")
+    
+    # Check for extreme values that could cause numerical issues
+    max_element = max(np.max(np.abs(A)), np.max(np.abs(B)), np.max(np.abs(C)))
+    if max_element > 1e12:
+        if verbose:
+            print(f"Warning: Large input values detected (max={max_element:.2e}), may cause numerical issues")
+    
     if verbose:
         print("Solving system: A[cos θ₁, sin θ₁] + B[cos θ₂, sin θ₂] = C")
         print(f"A = \n{A}")
@@ -680,6 +705,12 @@ def solve_trig_sys(A, B, C, verbose=False, real_solutions_only=True):
         # Convert t to real if it's effectively real, but keep complex if needed
         if np.iscomplex(t) and abs(t.imag) <= 1e-10:
             t = t.real
+        
+        # Check for extreme t values that could cause numerical issues
+        if abs(t) > 1e8:
+            if verbose:
+                print(f"  Skipping extreme t value: {t}")
+            continue
         
         # Step 5: Convert t back to cos(θ₁) and sin(θ₁) using inverse Weierstrass substitution
         denominator = 1 + t**2
