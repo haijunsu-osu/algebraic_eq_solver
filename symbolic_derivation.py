@@ -8,7 +8,9 @@ A[cos x, sin x] + B[cos y, sin y] = C
 
 Where A, B are 2x2 matrices and C is a 2x1 vector.
 
-The approach:
+The    solutions = solve_trig_sys(A, B, C)
+    
+    print(f"Found {len(solutions)} solutions:")proach:
 1. Express cos(y) and sin(y) in terms of cos(x) and sin(x)
 2. Apply the identity cos²(y) + sin²(y) = 1
 3. Use Weierstrass substitution: cos(x) = (1-t²)/(1+t²), sin(x) = 2t/(1+t²)
@@ -167,9 +169,9 @@ import numpy as np
 import math
 
 
-def solve_trigonometric_system(A, B, C):
+def solve_trig_sys(A, B, C):
     """
-    Solve the trigonometric system A[cos x, sin x] + B[cos y, sin y] = C.
+    Solve the trigonometric system A[cos th1, sin th1] + B[cos th2, sin th2] = C.
     
     Args:
         A: 2x2 numpy array
@@ -177,7 +179,7 @@ def solve_trigonometric_system(A, B, C):
         C: 2x1 numpy array
         
     Returns:
-        List of solution dictionaries, each containing 'x', 'y', 'cos_x', 'sin_x', 'cos_y', 'sin_y'
+        List of solution dictionaries, each containing 'th1', 'th2', 'cos_th1', 'sin_th1', 'cos_th2', 'sin_th2'
     """
     solutions = []
     

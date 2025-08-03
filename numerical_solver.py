@@ -176,7 +176,7 @@ def solve_rank_1_b_case(A: np.ndarray, B: np.ndarray, C: np.ndarray,
         print(f"Rearranged: {left_A[0]:.6f}*cos(θ₁) + {left_A[1]:.6f}*sin(θ₁) + {-right_C:.6f} = 0")
     
     # Solve the trigonometric equation: left_A[0]*cos(θ₁) + left_A[1]*sin(θ₁) + (-right_C) = 0
-    th1_solutions = solve_trigonometric_equation(left_A[0], left_A[1], -right_C, verbose)
+    th1_solutions = solve_trig_eq(left_A[0], left_A[1], -right_C, verbose)
     
     if verbose:
         print(f"Step 3: Found {len(th1_solutions)} solutions for θ₁")
@@ -260,7 +260,7 @@ def solve_rank_1_b_case(A: np.ndarray, B: np.ndarray, C: np.ndarray,
                 
                 # Solve: v1[0]*cos(θ₂) + v1[1]*sin(θ₂) = required_projection
                 # with constraint cos²(θ₂) + sin²(θ₂) = 1
-                th2_solutions = solve_trigonometric_equation(v1[0], v1[1], -required_projection, verbose)
+                th2_solutions = solve_trig_eq(v1[0], v1[1], -required_projection, verbose)
                 
                 for th2 in th2_solutions:
                     cos_th2 = math.cos(th2)
@@ -289,7 +289,7 @@ def solve_rank_1_b_case(A: np.ndarray, B: np.ndarray, C: np.ndarray,
     return solutions
 
 
-def solve_trigonometric_equation(a: float, b: float, c: float, verbose: bool = False) -> List[float]:
+def solve_trig_eq(a: float, b: float, c: float, verbose: bool = False) -> List[float]:
     """
     Solve the trigonometric equation: a*cos(θ) + b*sin(θ) + c = 0
     
@@ -511,7 +511,7 @@ def solve_singular_b_system(A: np.ndarray, B: np.ndarray, C: np.ndarray,
         return solutions
 
 
-def solve_trigonometric_system(A, B, C, verbose=False, real_solutions_only=True):
+def solve_trig_sys(A, B, C, verbose=False, real_solutions_only=True):
     """
     Solve the trigonometric system A[cos θ₁, sin θ₁] + B[cos θ₂, sin θ₂] = C.
     
@@ -828,7 +828,7 @@ def test_solver():
     print(f"C = {C}")
     
     # Solve the system (verbose=False for cleaner output)
-    solutions = solve_trigonometric_system(A, B, C, verbose=False, real_solutions_only=True)
+    solutions = solve_trig_sys(A, B, C, verbose=False, real_solutions_only=True)
     
     print(f"\n{'='*40}")
     print("SOLVER RESULTS")
@@ -900,7 +900,7 @@ def test_multiple_cases():
         C = A @ np.array([cos_th1_true, sin_th1_true]) + B @ np.array([cos_th2_true, sin_th2_true])
         
         # Solve the system (verbose=False for cleaner output)
-        solutions = solve_trigonometric_system(A, B, C, verbose=False, real_solutions_only=True)
+        solutions = solve_trig_sys(A, B, C, verbose=False, real_solutions_only=True)
         solution_counts.append(len(solutions))
         
         # Check if any solution matches the reference solution
@@ -956,7 +956,7 @@ def test_singular_cases():
     print(f"  θ₂ = free parameter")
     print("  ⚠️  WARNING: θ₂ is a free parameter")
     
-    solutions1 = solve_trigonometric_system(A1, B1, C1, verbose=False, real_solutions_only=True)
+    solutions1 = solve_trig_sys(A1, B1, C1, verbose=False, real_solutions_only=True)
     print(f"\nSOLVER RESULTS:")
     print(f"Matrix type: Zero matrix")
     print(f"Found {len(solutions1)} real solutions (showing representative th2 values)")
@@ -983,7 +983,7 @@ def test_singular_cases():
     print(f"  This is a constructed test case - C chosen to yield 4 solutions")
     print(f"  Expected: 4 real solutions")
     
-    solutions2 = solve_trigonometric_system(A2, B2, C2, verbose=False, real_solutions_only=True)
+    solutions2 = solve_trig_sys(A2, B2, C2, verbose=False, real_solutions_only=True)
     print(f"\nSOLVER RESULTS:")
     print(f"Matrix type: Rank-1 matrix B = [[2, 2], [1, 1]]")
     print(f"Found {len(solutions2)} real solutions")
@@ -1034,7 +1034,7 @@ def test_singular_cases():
     print(f"  (cos(θ₁), sin(θ₁)) = ({cos_th1_true:.6f}, {sin_th1_true:.6f})")
     print(f"  (cos(θ₂), sin(θ₂)) = ({cos_th2_true:.6f}, {sin_th2_true:.6f})")
     
-    solutions3 = solve_trigonometric_system(A3, B3, C3, verbose=False, real_solutions_only=True)
+    solutions3 = solve_trig_sys(A3, B3, C3, verbose=False, real_solutions_only=True)
     print(f"\nSOLVER RESULTS:")
     print(f"Matrix type: Rank-1 matrix B = [[1, 2], [0.5, 1]]")
     print(f"Found {len(solutions3)} real solutions")
@@ -1066,7 +1066,7 @@ def test_singular_cases():
         
         # Let's investigate with verbose output to understand why
         print("\n   DETAILED INVESTIGATION (with verbose output):")
-        solutions3_verbose = solve_trigonometric_system(A3, B3, C3, verbose=True, real_solutions_only=True)
+        solutions3_verbose = solve_trig_sys(A3, B3, C3, verbose=True, real_solutions_only=True)
     
     # Test Case 4: Compare with non-singular case
     print("\nTEST CASE 4: Non-singular B (for comparison)")
@@ -1090,7 +1090,7 @@ def test_singular_cases():
     print(f"  θ₁ = {th1_true4:.6f} rad ({math.degrees(th1_true4):.1f}°)")
     print(f"  θ₂ = {th2_true4:.6f} rad ({math.degrees(th2_true4):.1f}°)")
     
-    solutions4 = solve_trigonometric_system(A4, B4, C4, verbose=False, real_solutions_only=True)
+    solutions4 = solve_trig_sys(A4, B4, C4, verbose=False, real_solutions_only=True)
     print(f"\nSOLVER RESULTS:")
     print(f"Matrix type: Non-singular matrix")
     print(f"Found {len(solutions4)} real solutions")

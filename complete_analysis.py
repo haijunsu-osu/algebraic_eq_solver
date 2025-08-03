@@ -212,9 +212,9 @@ def demonstrate_complete_solution():
     print("-" * 40)
     
     # Import our numerical solver
-    from numerical_solver import solve_trigonometric_system
+    from numerical_solver import solve_trig_sys
     
-    solutions = solve_trigonometric_system(A, B, C, verbose=False)
+    solutions = solve_trig_sys(A, B, C, verbose=False)
     
     print(f"\nFound {len(solutions)} solutions:")
     

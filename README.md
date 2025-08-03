@@ -50,7 +50,7 @@ The main solver automatically handles both regular and singular B matrices:
 
 ```python
 import numpy as np
-from numerical_solver import solve_trigonometric_system
+from numerical_solver import solve_trig_sys
 
 # Define the system matrices
 A = np.array([[2.0, 1.0],
@@ -62,7 +62,7 @@ B = np.array([[1.5, -0.5],
 C = np.array([2.939, 4.134])
 
 # Solve the system (automatically handles singular B)
-solutions = solve_trigonometric_system(A, B, C)
+solutions = solve_trig_sys(A, B, C)
 
 # Display results
 for i, sol in enumerate(solutions):
@@ -85,7 +85,7 @@ sin_th1 = 0.6
 C = A @ np.array([cos_th1, sin_th1])
 
 # Solve with the main solver (automatically detects singular B)
-solutions = solve_trigonometric_system(A, B, C, verbose=True)
+solutions = solve_trig_sys(A, B, C, verbose=True)
 print(f"Found {len(solutions)} solutions (θ₂ is free parameter)")
 ```
 

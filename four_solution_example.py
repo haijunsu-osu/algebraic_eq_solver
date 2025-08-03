@@ -79,14 +79,14 @@ print(f"rank(B) = {np.linalg.matrix_rank(B)}")
 print(f"det(B) = {np.linalg.det(B):.2e}")
 
 if __name__ == "__main__":
-    from numerical_solver import solve_trigonometric_system
+    from numerical_solver import solve_trig_sys
     
     print(f"\nSOLUTION VERIFICATION:")
-    solutions = solve_trigonometric_system(A, B, C, verbose=False)
+    solutions = solve_trig_sys(A, B, C, verbose=False)
     print(f"Number of solutions found: {len(solutions)}")
     
     for i, sol in enumerate(solutions):
-        print(f"Solution {i+1}: x = {sol['x']:.6f}, y = {sol['y']:.6f}")
+        print(f"Solution {i+1}: th1 = {sol['th1']:.6f}, th2 = {sol['th2']:.6f}")
         
         # Verify
         eq1 = A[0,0]*sol['cos_x'] + A[0,1]*sol['sin_x'] + B[0,0]*sol['cos_y'] + B[0,1]*sol['sin_y']
