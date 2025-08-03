@@ -141,9 +141,6 @@ python symbolic_coefficients.py
 # Run complete analysis
 python complete_analysis.py
 
-# Test extended solver (including singular B matrices)
-python extended_solver.py
-```
 
 ### Sample Test Results
 
@@ -225,8 +222,6 @@ When `det(B) = 0`, the standard quartic approach fails. The extended solver hand
 
 ## 📚 References
 
-- **Pieper, D.L. (1968)**: "The Kinematics of Manipulators Under Computer Control"
-- **Manocha, D. & Canny, J.F. (1994)**: "Efficient Inverse Kinematics for General 6R Manipulators"
 - **Weierstrass Substitution**: Classical technique for trigonometric integrals and equations
 
 ## 🛠️ Development
