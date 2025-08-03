@@ -7,10 +7,32 @@ This directory contains a comprehensive scientific paper describing the trigonom
 - ⏳ PDF compilation pending (requires LaTeX installation)
 - 📋 Ready for arXiv submission
 
-## Contents
-- **LaTeX Source**: Complete paper with arXiv template
-- **Compilation Instructions**: Step-by-step guide for generating PDF
-- **GitHub Integration**: Repository link included in paper
+## Directory Contents
+- **`paper.tex`**: Complete LaTeX source with arXiv template
+- **`compile_paper.bat`**: Windows compilation script
+- **`compile_paper.sh`**: Unix/Mac/Linux compilation script
+- **`COMPILE_INSTRUCTIONS.md`**: Detailed setup and compilation guide
+- **`PAPER_README.md`**: This documentation file
+
+## Quick Compilation
+
+### Windows
+```cmd
+cd paper
+compile_paper.bat
+```
+
+### Unix/Mac/Linux
+```bash
+cd paper
+chmod +x compile_paper.sh
+./compile_paper.sh
+```
+
+### Online (No LaTeX installation needed)
+1. Upload `paper.tex` to [Overleaf](https://www.overleaf.com/)
+2. Compile online and download PDF
+3. Copy the PDF to the root directory as `paper.pdf`
 
 ## Paper Structure
 1. **Title & Author**: Haijun Su (haijunsu-osu)
@@ -28,9 +50,15 @@ This directory contains a comprehensive scientific paper describing the trigonom
 6. **Conclusions**: Robustness and practical applications
 7. **References**: 9 relevant academic sources
 
+## Workflow
+1. **Compile**: Run compilation script or use online LaTeX
+2. **Verify**: Check that `paper.pdf` is generated
+3. **Commit**: The PDF will be copied to root directory for git tracking
+4. **Submit**: Upload to arXiv with GitHub repository link
+
 ## Next Steps
 1. Compile `paper.tex` to generate `paper.pdf`
-2. Commit the PDF to repository
+2. Commit the PDF to repository: `git add paper.pdf && git commit -m "Add compiled scientific paper PDF"`
 3. Submit to arXiv with GitHub repository link
 4. Add arXiv link to repository README
 

@@ -29,8 +29,18 @@ if [ -f "paper.pdf" ]; then
     echo "📋 Ready to commit PDF to repository"
     echo "🚀 Ready for arXiv submission"
     
+    # Copy PDF to parent directory for git tracking
+    cp paper.pdf ../paper.pdf
+    echo "📁 PDF copied to root directory for git tracking"
+    
     # Show file size
     echo "PDF size: $(ls -lh paper.pdf | awk '{print $5}')"
+    
+    echo ""
+    echo "To commit the PDF to git:"
+    echo "  cd .."
+    echo "  git add paper.pdf"
+    echo "  git commit -m 'Add compiled scientific paper PDF'"
 else
     echo "❌ Compilation failed. Check the LaTeX source for errors."
     exit 1

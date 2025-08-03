@@ -7,17 +7,17 @@ __pycache__/
 *.so
 
 # LaTeX intermediate files (keep source private, commit PDF only)
-*.tex
-*.aux
-*.log
-*.out
-*.toc
-*.bbl
-*.blg
-*.fls
-*.fdb_latexmk
-*.synctex.gz
-COMPILE_INSTRUCTIONS.md
+paper/*.tex
+paper/*.aux
+paper/*.log
+paper/*.out
+paper/*.toc
+paper/*.bbl
+paper/*.blg
+paper/*.fls
+paper/*.fdb_latexmk
+paper/*.synctex.gz
+paper/COMPILE_INSTRUCTIONS.md
 
 # Distribution / packaging
 .Python

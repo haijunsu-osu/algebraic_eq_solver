@@ -35,6 +35,10 @@ if exist paper.pdf (
     echo 📋 Ready to commit PDF to repository
     echo 🚀 Ready for arXiv submission
     
+    REM Copy PDF to parent directory for git tracking
+    copy paper.pdf ..\paper.pdf
+    echo 📁 PDF copied to root directory for git tracking
+    
     REM Show file info
     dir paper.pdf
 ) else (
@@ -42,5 +46,11 @@ if exist paper.pdf (
     pause
     exit /b 1
 )
+
+echo.
+echo To commit the PDF to git:
+echo   cd ..
+echo   git add paper.pdf
+echo   git commit -m "Add compiled scientific paper PDF"
 
 pause
