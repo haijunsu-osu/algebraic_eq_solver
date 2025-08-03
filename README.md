@@ -30,8 +30,7 @@ The solution methodology follows these key steps:
 ```
 algebraic_eq_solver/
 ├── README.md                    # This file
-├── numerical_solver.py          # Main numerical solver (no SymPy dependency)
-├── extended_solver.py           # Extended solver for singular B matrices
+├── numerical_solver.py          # Main numerical solver with extended capabilities
 ├── symbolic_derivation.py       # Complete symbolic derivation using SymPy
 ├── symbolic_coefficients.py     # Detailed quartic coefficient expressions
 └── complete_analysis.py         # End-to-end demonstration
@@ -47,10 +46,11 @@ pip install numpy sympy
 
 ### Basic Usage
 
+The main solver automatically handles both regular and singular B matrices:
+
 ```python
 import numpy as np
 from numerical_solver import solve_trigonometric_system
-from extended_solver import solve_extended_trigonometric_system
 
 # Define the system matrices
 A = np.array([[2.0, 1.0],
@@ -62,7 +62,7 @@ B = np.array([[1.5, -0.5],
 C = np.array([2.939, 4.134])
 
 # Solve the system (automatically handles singular B)
-solutions = solve_extended_trigonometric_system(A, B, C)
+solutions = solve_trigonometric_system(A, B, C)
 
 # Display results
 for i, sol in enumerate(solutions):
@@ -84,26 +84,28 @@ cos_x = 0.8  # cos²(x) + sin²(x) = 1
 sin_x = 0.6
 C = A @ np.array([cos_x, sin_x])
 
-# Solve with extended solver
-solutions = solve_extended_trigonometric_system(A, B, C, verbose=True)
+# Solve with the main solver (automatically detects singular B)
+solutions = solve_trigonometric_system(A, B, C, verbose=True)
 print(f"Found {len(solutions)} solutions (y is free parameter)")
 ```
 
 ## 📊 Key Features
 
-### ✅ Numerical Solver (`numerical_solver.py`)
-- **Pure numerical implementation** - No SymPy dependency
-- **Fast execution** - Sub-millisecond solving time
+### ✅ Unified Solver (`numerical_solver.py`)
+- **Automatic singular matrix detection** - Handles both regular and singular B matrices
+- **Pure numerical implementation** - No SymPy dependency for solving
+- **Fast execution** - Sub-millisecond solving time for regular cases
 - **Robust validation** - Comprehensive error checking
 - **Multiple solutions** - Finds all valid solutions
 - **Machine precision** - Errors typically < 1e-15
-- **Handles non-singular B matrices** - Uses quartic polynomial approach
 
-### 🔧 Extended Solver (`extended_solver.py`)
-- **Handles singular B matrices** - Cases where det(B) = 0
+#### Regular Matrix Handling:
+- **Quartic polynomial approach** - For non-singular B matrices
+- **Weierstrass substitution** - Converts to polynomial system
+
+#### Singular Matrix Handling:
 - **Zero matrix case** - When B = 0, reduces to A[cos x, sin x] = C
 - **Rank-1 matrix case** - Uses geometric constraints and SVD analysis
-- **Automatic detection** - Switches between standard and extended methods
 - **Comprehensive analysis** - Detailed singular matrix structure analysis
 
 ### 🔬 Symbolic Analysis (`symbolic_derivation.py`)
