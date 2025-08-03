@@ -19,6 +19,45 @@ A[cos θ₁, sin θ₁] + B[cos θ₂, sin θ₂] = C
 ```bash
 git clone https://github.com/haijunsu-osu/algebraic_eq_solver.git
 cd algebraic_eq_solver
+pip install .
+```
+
+This installs the `algebraic-eq-solver` package and provides the `trig-solver` command-line tool.
+
+## Quick Start
+
+### Command Line Interface
+
+The package provides a convenient CLI for solving trigonometric equations:
+
+```bash
+# Solve a system
+trig-solver solve -A "[[2,1],[1,3]]" -B "[[1.5,-0.5],[0.5,2]]" -C "[1,2]"
+
+# Run comprehensive tests
+trig-solver test --type all
+
+# Get help
+trig-solver --help
+```
+
+### Python API
+
+```python
+from algebraic_eq_solver import solve_trig_sys
+import numpy as np
+
+# Define matrices
+A = np.array([[2.0, 1.0], [1.0, 3.0]])
+B = np.array([[1.5, -0.5], [0.5, 2.0]])
+C = np.array([1.0, 2.0])
+
+# Solve the system
+solutions = solve_trig_sys(A, B, C)
+for i, (th1, th2) in enumerate(solutions):
+    print(f"Solution {i+1}: θ₁ = {th1:.6f}, θ₂ = {th2:.6f}")
+```
+cd algebraic_eq_solver
 pip install -e .
 ```
 
