@@ -2,8 +2,15 @@
 
 A robust numerical solver for trigonometric systems of the form:
 ```
-A[cos θ₁, sin θ₁] + B[cos θ₂, sin θ₂] = C
+A[cos θ₁, sin θ₁]ᵀ + B[cos θ₂, sin θ₂]ᵀ = C
 ```
+
+Where:
+- **A** = [[a₁₁, a₁₂], [a₂₁, a₂₂]] ∈ ℝ²ˣ² (coefficient matrix for θ₁)
+- **B** = [[b₁₁, b₁₂], [b₂₁, b₂₂]] ∈ ℝ²ˣ² (coefficient matrix for θ₂) 
+- **C** = [c₁, c₂]ᵀ ∈ ℝ² (target vector)
+
+**Goal**: Solve these two equations analytically to find all possible values of angles θ₁ and θ₂.
 
 ## Installation
 
@@ -81,28 +88,9 @@ singular_solutions = solve_trig_sys(A_singular, B_singular, C_singular, verbose=
 print(f"Found {len(singular_solutions)} solutions (θ₂ is free parameter)")
 ```
 
-## Mathematical Background
 
-This solver addresses the fundamental problem of solving trigonometric systems of the form:
 
-```
-a₁ sin(θ₁) + b₁ cos(θ₁) + a₂ sin(θ₂) + b₂ cos(θ₂) = c₁
-a₃ sin(θ₁) + b₃ cos(θ₁) + a₄ sin(θ₂) + b₄ cos(θ₂) = c₂
-```
-
-Which can be expressed in matrix form as:
-```
-A[cos θ₁, sin θ₁]ᵀ + B[cos θ₂, sin θ₂]ᵀ = C
-```
-
-Where:
-- **A** = [[b₁, a₁], [b₃, a₃]] ∈ ℝ²ˣ² (coefficient matrix for θ₁)
-- **B** = [[b₂, a₂], [b₄, a₄]] ∈ ℝ²ˣ² (coefficient matrix for θ₂) 
-- **C** = [c₁, c₂]ᵀ ∈ ℝ² (target vector)
-
-**Goal**: Solve these two equations analytically to find all possible values of angles θ₁ and θ₂.
-
-### Solution Approach
+## Mathematical Background: Solution Process
 
 This solver implements a complete analytical approach:
 
@@ -161,56 +149,6 @@ The system transforms into a quartic polynomial: `a₄t⁴ + a₃t³ + a₂t² +
 - **Accuracy**: Machine precision (< 1e-15 error)
 - **Speed**: < 1ms per solve operation
 - **Robustness**: Handles edge cases and numerical stability
-
-## 🧪 Testing and Validation
-
-### Run All Tests
-
-```bash
-# Run comprehensive test suite
-trig-solver test --type all
-
-# Run basic tests only
-trig-solver test --type basic
-```
-
-### Test Individual Components
-
-```bash
-# Test with specific matrices
-trig-solver solve -A "[[2,1],[1,3]]" -B "[[1.5,-0.5],[0.5,2]]" -C "[1,2]" --verbose
-
-# Test symbolic derivation (if available)
-python symbolic_derivation.py
-
-# View detailed coefficient expressions (if available)
-python symbolic_coefficients.py
-
-# Run complete analysis (if available)
-python complete_analysis.py
-```
-
-
-### Sample Test Results
-
-```
-TESTING THE NUMERICAL SOLVER
-============================================================
-True solution:
-  θ₁ = 0.523599 rad (30.0°)
-  θ₂ = 0.785398 rad (45.0°)
-
-Found 2 valid solutions:
-Solution 1:
-  θ₁ = 1.233171 rad (70.7°) - Alternative valid solution
-  θ₂ = 0.245952 rad (14.1°)
-  
-Solution 2:
-  θ₁ = 0.523599 rad (30.0°) - ✓ MATCHES KNOWN SOLUTION
-  θ₂ = 0.785398 rad (45.0°)
-
-Success rate: 10/10 (100.0%)
-```
 
 ### Singular B Matrix Cases
 
