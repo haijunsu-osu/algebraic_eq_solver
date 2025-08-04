@@ -5,14 +5,6 @@ A robust numerical solver for trigonometric systems of the form:
 A[cos θ₁, sin θ₁] + B[cos θ₂, sin θ₂] = C
 ```
 
-## Features
-
-- **Complete Solution Coverage**: Handles both regular and singular B matrices
-- **Robust Numerical Methods**: Uses Weierstrass substitution and quartic polynomial solving
-- **Singularity Handling**: Advanced SVD-based analysis for rank-deficient matrices
-- **Edge Case Protection**: Comprehensive input validation and numerical stability safeguards
-- **Multiple Solution Types**: Returns all real solutions with optional complex solution support
-
 ## Installation
 
 ### From Source
@@ -91,7 +83,28 @@ print(f"Found {len(singular_solutions)} solutions (θ₂ is free parameter)")
 
 ## Mathematical Background
 
-This solver implements a complete analytical approach to solving trigonometric systems:
+This solver addresses the fundamental problem of solving trigonometric systems of the form:
+
+```
+a₁ sin(θ₁) + b₁ cos(θ₁) + a₂ sin(θ₂) + b₂ cos(θ₂) = c₁
+a₃ sin(θ₁) + b₃ cos(θ₁) + a₄ sin(θ₂) + b₄ cos(θ₂) = c₂
+```
+
+Which can be expressed in matrix form as:
+```
+A[cos θ₁, sin θ₁]ᵀ + B[cos θ₂, sin θ₂]ᵀ = C
+```
+
+Where:
+- **A** = [[b₁, a₁], [b₃, a₃]] ∈ ℝ²ˣ² (coefficient matrix for θ₁)
+- **B** = [[b₂, a₂], [b₄, a₄]] ∈ ℝ²ˣ² (coefficient matrix for θ₂) 
+- **C** = [c₁, c₂]ᵀ ∈ ℝ² (target vector)
+
+**Goal**: Solve these two equations analytically to find all possible values of angles θ₁ and θ₂.
+
+### Solution Approach
+
+This solver implements a complete analytical approach:
 
 1. **Linear System Transformation**: Express `cos(θ₂)` and `sin(θ₂)` in terms of `cos(θ₁)` and `sin(θ₁)`
 2. **Trigonometric Identity**: Apply `cos²(θ₂) + sin²(θ₂) = 1`
@@ -99,11 +112,29 @@ This solver implements a complete analytical approach to solving trigonometric s
 4. **Quartic Polynomial**: Derive a single quartic polynomial in variable `t`
 5. **Numerical Solution**: Solve using `numpy.roots()` and convert back to `(θ₁,θ₂)`
 
+### Quartic Polynomial Coefficients
+
+The system transforms into a quartic polynomial: `a₄t⁴ + a₃t³ + a₂t² + a₁t + a₀ = 0`
+
+**Common Denominator**: `Δ² = (det(B))² = (B₀₀B₁₁ - B₀₁B₁₀)²`
+
+**Coefficient Structure**:
+- `a₄` and `a₀`: Symmetric structure with respect to the transformation
+- `a₃` and `a₁`: Factor of 4, similar algebraic form
+- `a₂`: Factor of 2, includes cross-terms between matrices
+
 ## 📊 Key Features
+
+### ✅ Complete Solution Coverage
+- **Handles both regular and singular B matrices** - Unified approach for all matrix types
+- **Robust numerical methods** - Uses Weierstrass substitution and quartic polynomial solving
+- **Advanced singularity handling** - SVD-based analysis for rank-deficient matrices
+- **Comprehensive edge case protection** - Input validation and numerical stability safeguards
+- **Multiple solution types** - Returns all real solutions with optional complex solution support
 
 ### ✅ Unified Solver
 - **Automatic singular matrix detection** - Handles both regular and singular B matrices
-- **Pure numerical implementation** - No SymPy dependency for solving solving
+- **Pure numerical implementation** - No SymPy dependency for solving
 - **Fast execution** - Sub-millisecond solving time for regular cases
 - **Robust validation** - Comprehensive error checking
 - **Multiple solutions** - Finds all valid solutions
@@ -180,19 +211,6 @@ Solution 2:
 
 Success rate: 10/10 (100.0%)
 ```
-
-## 📖 Mathematical Background
-
-### Quartic Polynomial Coefficients
-
-The system transforms into a quartic polynomial: `a₄t⁴ + a₃t³ + a₂t² + a₁t + a₀ = 0`
-
-**Common Denominator**: `Δ² = (det(B))² = (B₀₀B₁₁ - B₀₁B₁₀)²`
-
-**Coefficient Structure**:
-- `a₄` and `a₀`: Symmetric structure with respect to the transformation
-- `a₃` and `a₁`: Factor of 4, similar algebraic form
-- `a₂`: Factor of 2, includes cross-terms between matrices
 
 ### Singular B Matrix Cases
 
